@@ -1,0 +1,4 @@
+name: libmp3lame
+description: Dart port of the libmp3lame MP3 encoding library
+dependencies:
+  browser: any
