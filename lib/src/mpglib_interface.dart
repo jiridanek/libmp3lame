@@ -24,20 +24,23 @@
 
 /* $Id: mpglib_interface.c,v 1.42 2011/05/07 16:05:17 rbrito Exp $ */
 
-#ifdef HAVE_CONFIG_H
-# include <config.h>
-#endif
+part of libmp3lame;
 
-#ifdef HAVE_MPGLIB
-#define hip_global_struct mpstr_tag 
-#include "lame.h"
-#include "machine.h"
-#include "encoder.h"
-#include "interface.h"
-
-#include "util.h"
-
-
+//
+//#ifdef HAVE_CONFIG_H
+//# include <config.h>
+//#endif
+//
+//#ifdef HAVE_MPGLIB
+//#define hip_global_struct mpstr_tag
+//#include "lame.h"
+//#include "machine.h"
+//#include "encoder.h"
+//#include "interface.h"
+//
+//#include "util.h"
+//
+//
 
 #if DEPRECATED_OR_OBSOLETE_CODE_REMOVED
 /*
@@ -147,20 +150,20 @@ decode1_headersB_clipchoice(PMPSTR pmp, unsigned char *buffer, int len,
     mp3data->header_parsed = 0;
 
     ret = (*decodeMP3_ptr) (pmp, buffer, len, p, (int) psize, &processed_bytes);
-    /* three cases:  
+    /* three cases:
      * 1. headers parsed, but data not complete
-     *       pmp->header_parsed==1 
-     *       pmp->framesize=0           
+     *       pmp->header_parsed==1
+     *       pmp->framesize=0
      *       pmp->fsizeold=size of last frame, or 0 if this is first frame
      *
      * 2. headers, data parsed, but ancillary data not complete
-     *       pmp->header_parsed==1 
-     *       pmp->framesize=size of frame           
+     *       pmp->header_parsed==1
+     *       pmp->framesize=size of frame
      *       pmp->fsizeold=size of last frame, or 0 if this is first frame
      *
-     * 3. frame fully decoded:  
-     *       pmp->header_parsed==0 
-     *       pmp->framesize=0           
+     * 3. frame fully decoded:
+     *       pmp->header_parsed==0
+     *       pmp->framesize=0
      *       pmp->fsizeold=size of frame (which is now the last frame)
      *
      */
@@ -266,7 +269,7 @@ lame_decode1_headersB(unsigned char *buffer,
  *  -1     error
  *   0     ok, but need more data before outputing any samples
  *   n     number of samples output.  Will be at most one frame of
- *         MPEG data.  
+ *         MPEG data.
  */
 
 int
@@ -368,7 +371,7 @@ hip_decode1_unclipped(hip_t hip, unsigned char *buffer, size_t len, sample_t pcm
  *  -1     error
  *   0     ok, but need more data before outputing any samples
  *   n     number of samples output.  Will be at most one frame of
- *         MPEG data.  
+ *         MPEG data.
  */
 
 int

@@ -24,25 +24,25 @@
 
 /* $Id: quantize.c,v 1.216.2.1 2012/01/08 23:49:58 robert Exp $ */
 
-#ifdef HAVE_CONFIG_H
-# include <config.h>
-#endif
+//#ifdef HAVE_CONFIG_H
+//# include <config.h>
+//#endif
+//
+//#include "lame.h"
+//#include "machine.h"
+//#include "encoder.h"
+//#include "util.h"
+//#include "quantize_pvt.h"
+//#include "reservoir.h"
+//#include "bitstream.h"
+//#include "vbrquantize.h"
+//#include "quantize.h"
+//#ifdef HAVE_XMMINTRIN_H
+//#include "vector/lame_intrin.h"
+//#endif
 
-#include "lame.h"
-#include "machine.h"
-#include "encoder.h"
-#include "util.h"
-#include "quantize_pvt.h"
-#include "reservoir.h"
-#include "bitstream.h"
-#include "vbrquantize.h"
-#include "quantize.h"
-#ifdef HAVE_XMMINTRIN_H
-#include "vector/lame_intrin.h"
-#endif
 
-
-
+part of libmp3lame;
 
 /* convert from L/R <-> Mid/Side */
 static void
@@ -1660,7 +1660,7 @@ VBR_new_iteration_loop(lame_internal_flags * gfc, const FLOAT pe[2][2],
     const FLOAT (*const_l3_xmin)[2][SFBMAX] = (const FLOAT (*)[2][SFBMAX])l3_xmin;
     const FLOAT (*const_xrpow)[2][576] = (const FLOAT (*)[2][576])xrpow;
     const int (*const_max_bits)[2] = (const int (*)[2])max_bits;
-    
+
     (void) ms_ener_ratio; /* not used */
 
     memset(xrpow, 0, sizeof(xrpow));
@@ -1700,7 +1700,7 @@ VBR_new_iteration_loop(lame_internal_flags * gfc, const FLOAT pe[2][2],
         }
 
         for (; i < cfg->vbr_max_bitrate_index; i++) {
-            if (used_bits <= frameBits[i]) 
+            if (used_bits <= frameBits[i])
                 break;
         }
         if (i > cfg->vbr_max_bitrate_index) {
@@ -1709,7 +1709,7 @@ VBR_new_iteration_loop(lame_internal_flags * gfc, const FLOAT pe[2][2],
         if (pad > 0) {
             for (j = cfg->vbr_max_bitrate_index; j > i; --j) {
                 int const unused = frameBits[j] - used_bits;
-                if (unused <= pad) 
+                if (unused <= pad)
                     break;
             }
             eov->bitrate_index = j;

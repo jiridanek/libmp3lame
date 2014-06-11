@@ -32,123 +32,123 @@
 **           Takehiro  - some dirty hack for speed up
 */
 
+part of libmp3lame;
+
 /* $Id: fft.c,v 1.38 2009/04/20 21:48:00 robert Exp $ */
 
-#ifdef HAVE_CONFIG_H
-# include <config.h>
-#endif
-
-#include "lame.h"
-#include "machine.h"
-#include "encoder.h"
-#include "util.h"
-#include "fft.h"
-
-#include "vector/lame_intrin.h"
-
+//#ifdef HAVE_CONFIG_H
+//# include <config.h>
+//#endif
+//
+//#include "lame.h"
+//#include "machine.h"
+//#include "encoder.h"
+//#include "util.h"
+//
+//#include "vector/lame_intrin.h"
 
 
-#define TRI_SIZE (5-1)  /* 1024 =  4**5 */
 
-/* fft.c    */
-static FLOAT window[BLKSIZE], window_s[BLKSIZE_s / 2];
+const TRI_SIZE = (5-1);  /* 1024 =  4**5 */
 
-static const FLOAT costab[TRI_SIZE * 2] = {
-    9.238795325112867e-01, 3.826834323650898e-01,
-    9.951847266721969e-01, 9.801714032956060e-02,
-    9.996988186962042e-01, 2.454122852291229e-02,
-    9.999811752826011e-01, 6.135884649154475e-03
-};
+//static FLOAT window[BLKSIZE], window_s[BLKSIZE_s / 2];
+//
+//static const FLOAT costab[TRI_SIZE * 2] = {
+//    9.238795325112867e-01, 3.826834323650898e-01,
+//    9.951847266721969e-01, 9.801714032956060e-02,
+//    9.996988186962042e-01, 2.454122852291229e-02,
+//    9.999811752826011e-01, 6.135884649154475e-03
+//};
+//
+//static void
+//fht(FLOAT * fz, int n)
+//{
+//    const FLOAT *tri = costab;
+//    int     k4;
+//    FLOAT  *fi, *gi;
+//    FLOAT const *fn;
+//
+//    n <<= 1;            /* to get BLKSIZE, because of 3DNow! ASM routine */
+//    fn = fz + n;
+//    k4 = 4;
+//    do {
+//        FLOAT   s1, c1;
+//        int     i, k1, k2, k3, kx;
+//        kx = k4 >> 1;
+//        k1 = k4;
+//        k2 = k4 << 1;
+//        k3 = k2 + k1;
+//        k4 = k2 << 1;
+//        fi = fz;
+//        gi = fi + kx;
+//        do {
+//            FLOAT   f0, f1, f2, f3;
+//            f1 = fi[0] - fi[k1];
+//            f0 = fi[0] + fi[k1];
+//            f3 = fi[k2] - fi[k3];
+//            f2 = fi[k2] + fi[k3];
+//            fi[k2] = f0 - f2;
+//            fi[0] = f0 + f2;
+//            fi[k3] = f1 - f3;
+//            fi[k1] = f1 + f3;
+//            f1 = gi[0] - gi[k1];
+//            f0 = gi[0] + gi[k1];
+//            f3 = SQRT2 * gi[k3];
+//            f2 = SQRT2 * gi[k2];
+//            gi[k2] = f0 - f2;
+//            gi[0] = f0 + f2;
+//            gi[k3] = f1 - f3;
+//            gi[k1] = f1 + f3;
+//            gi += k4;
+//            fi += k4;
+//        } while (fi < fn);
+//        c1 = tri[0];
+//        s1 = tri[1];
+//        for (i = 1; i < kx; i++) {
+//            FLOAT   c2, s2;
+//            c2 = 1 - (2 * s1) * s1;
+//            s2 = (2 * s1) * c1;
+//            fi = fz + i;
+//            gi = fz + k1 - i;
+//            do {
+//                FLOAT   a, b, g0, f0, f1, g1, f2, g2, f3, g3;
+//                b = s2 * fi[k1] - c2 * gi[k1];
+//                a = c2 * fi[k1] + s2 * gi[k1];
+//                f1 = fi[0] - a;
+//                f0 = fi[0] + a;
+//                g1 = gi[0] - b;
+//                g0 = gi[0] + b;
+//                b = s2 * fi[k3] - c2 * gi[k3];
+//                a = c2 * fi[k3] + s2 * gi[k3];
+//                f3 = fi[k2] - a;
+//                f2 = fi[k2] + a;
+//                g3 = gi[k2] - b;
+//                g2 = gi[k2] + b;
+//                b = s1 * f2 - c1 * g3;
+//                a = c1 * f2 + s1 * g3;
+//                fi[k2] = f0 - a;
+//                fi[0] = f0 + a;
+//                gi[k3] = g1 - b;
+//                gi[k1] = g1 + b;
+//                b = c1 * g2 - s1 * f3;
+//                a = s1 * g2 + c1 * f3;
+//                gi[k2] = g0 - a;
+//                gi[0] = g0 + a;
+//                fi[k3] = f1 - b;
+//                fi[k1] = f1 + b;
+//                gi += k4;
+//                fi += k4;
+//            } while (fi < fn);
+//            c2 = c1;
+//            c1 = c2 * tri[0] - s1 * tri[1];
+//            s1 = c2 * tri[1] + s1 * tri[0];
+//        }
+//        tri += 2;
+//    } while (k4 < n);
+//}
 
-static void
-fht(FLOAT * fz, int n)
-{
-    const FLOAT *tri = costab;
-    int     k4;
-    FLOAT  *fi, *gi;
-    FLOAT const *fn;
 
-    n <<= 1;            /* to get BLKSIZE, because of 3DNow! ASM routine */
-    fn = fz + n;
-    k4 = 4;
-    do {
-        FLOAT   s1, c1;
-        int     i, k1, k2, k3, kx;
-        kx = k4 >> 1;
-        k1 = k4;
-        k2 = k4 << 1;
-        k3 = k2 + k1;
-        k4 = k2 << 1;
-        fi = fz;
-        gi = fi + kx;
-        do {
-            FLOAT   f0, f1, f2, f3;
-            f1 = fi[0] - fi[k1];
-            f0 = fi[0] + fi[k1];
-            f3 = fi[k2] - fi[k3];
-            f2 = fi[k2] + fi[k3];
-            fi[k2] = f0 - f2;
-            fi[0] = f0 + f2;
-            fi[k3] = f1 - f3;
-            fi[k1] = f1 + f3;
-            f1 = gi[0] - gi[k1];
-            f0 = gi[0] + gi[k1];
-            f3 = SQRT2 * gi[k3];
-            f2 = SQRT2 * gi[k2];
-            gi[k2] = f0 - f2;
-            gi[0] = f0 + f2;
-            gi[k3] = f1 - f3;
-            gi[k1] = f1 + f3;
-            gi += k4;
-            fi += k4;
-        } while (fi < fn);
-        c1 = tri[0];
-        s1 = tri[1];
-        for (i = 1; i < kx; i++) {
-            FLOAT   c2, s2;
-            c2 = 1 - (2 * s1) * s1;
-            s2 = (2 * s1) * c1;
-            fi = fz + i;
-            gi = fz + k1 - i;
-            do {
-                FLOAT   a, b, g0, f0, f1, g1, f2, g2, f3, g3;
-                b = s2 * fi[k1] - c2 * gi[k1];
-                a = c2 * fi[k1] + s2 * gi[k1];
-                f1 = fi[0] - a;
-                f0 = fi[0] + a;
-                g1 = gi[0] - b;
-                g0 = gi[0] + b;
-                b = s2 * fi[k3] - c2 * gi[k3];
-                a = c2 * fi[k3] + s2 * gi[k3];
-                f3 = fi[k2] - a;
-                f2 = fi[k2] + a;
-                g3 = gi[k2] - b;
-                g2 = gi[k2] + b;
-                b = s1 * f2 - c1 * g3;
-                a = c1 * f2 + s1 * g3;
-                fi[k2] = f0 - a;
-                fi[0] = f0 + a;
-                gi[k3] = g1 - b;
-                gi[k1] = g1 + b;
-                b = c1 * g2 - s1 * f3;
-                a = s1 * g2 + c1 * f3;
-                gi[k2] = g0 - a;
-                gi[0] = g0 + a;
-                fi[k3] = f1 - b;
-                fi[k1] = f1 + b;
-                gi += k4;
-                fi += k4;
-            } while (fi < fn);
-            c2 = c1;
-            c1 = c2 * tri[0] - s1 * tri[1];
-            s1 = c2 * tri[1] + s1 * tri[0];
-        }
-        tri += 2;
-    } while (k4 < n);
-}
-
-
-static const unsigned char rv_tbl[] = {
+const List<int> rv_tbl =  const [//FIXME: to byl uint char
     0x00, 0x80, 0x40, 0xc0, 0x20, 0xa0, 0x60, 0xe0,
     0x10, 0x90, 0x50, 0xd0, 0x30, 0xb0, 0x70, 0xf0,
     0x08, 0x88, 0x48, 0xc8, 0x28, 0xa8, 0x68, 0xe8,
@@ -165,34 +165,34 @@ static const unsigned char rv_tbl[] = {
     0x16, 0x96, 0x56, 0xd6, 0x36, 0xb6, 0x76, 0xf6,
     0x0e, 0x8e, 0x4e, 0xce, 0x2e, 0xae, 0x6e, 0xee,
     0x1e, 0x9e, 0x5e, 0xde, 0x3e, 0xbe, 0x7e, 0xfe
-};
+];
 
-#define ch01(index)  (buffer[chn][index])
+ch01(index) => (buffer[chn][index]);
 
-#define ml00(f) (window[i        ] * f(i))
-#define ml10(f) (window[i + 0x200] * f(i + 0x200))
-#define ml20(f) (window[i + 0x100] * f(i + 0x100))
-#define ml30(f) (window[i + 0x300] * f(i + 0x300))
+ml00(f) => (window[i        ] * f(i))
+ml10(f) => (window[i + 0x200] * f(i + 0x200));
+ml20(f) => (window[i + 0x100] * f(i + 0x100));
+ml30(f) => (window[i + 0x300] * f(i + 0x300));
 
-#define ml01(f) (window[i + 0x001] * f(i + 0x001))
-#define ml11(f) (window[i + 0x201] * f(i + 0x201))
-#define ml21(f) (window[i + 0x101] * f(i + 0x101))
-#define ml31(f) (window[i + 0x301] * f(i + 0x301))
+ml01(f) => (window[i + 0x001] * f(i + 0x001));
+ml11(f) => (window[i + 0x201] * f(i + 0x201));
+ml21(f) => (window[i + 0x101] * f(i + 0x101));
+ml31(f) => (window[i + 0x301] * f(i + 0x301));
 
-#define ms00(f) (window_s[i       ] * f(i + k))
-#define ms10(f) (window_s[0x7f - i] * f(i + k + 0x80))
-#define ms20(f) (window_s[i + 0x40] * f(i + k + 0x40))
-#define ms30(f) (window_s[0x3f - i] * f(i + k + 0xc0))
+ms00(f) => (window_s[i       ] * f(i + k));
+ms10(f) => (window_s[0x7f - i] * f(i + k + 0x80));
+ms20(f) => (window_s[i + 0x40] * f(i + k + 0x40));
+ms30(f) => (window_s[0x3f - i] * f(i + k + 0xc0));
 
-#define ms01(f) (window_s[i + 0x01] * f(i + k + 0x01))
-#define ms11(f) (window_s[0x7e - i] * f(i + k + 0x81))
-#define ms21(f) (window_s[i + 0x41] * f(i + k + 0x41))
-#define ms31(f) (window_s[0x3e - i] * f(i + k + 0xc1))
+ms01(f) => (window_s[i + 0x01] * f(i + k + 0x01));
+ms11(f) => (window_s[0x7e - i] * f(i + k + 0x81));
+ms21(f) => (window_s[i + 0x41] * f(i + k + 0x41));
+ms31(f) => (window_s[0x3e - i] * f(i + k + 0xc1));
 
 
 void
-fft_short(lame_internal_flags const *const gfc,
-          FLOAT x_real[3][BLKSIZE_s], int chn, const sample_t *const buffer[2])
+fft_short(lame_internal_flags gfc,
+          FLOAT x_real[3][BLKSIZE_s], int chn, List<typed.Float32List> buffer /*velky [2]*/)
 {
     int     i;
     int     j;
@@ -243,8 +243,8 @@ fft_short(lame_internal_flags const *const gfc,
 }
 
 void
-fft_long(lame_internal_flags const *const gfc,
-         FLOAT x[BLKSIZE], int chn, const sample_t *const buffer[2])
+fft_long(lame_internal_flags gfc,
+         typed.Float32List x /*velky [BLKSIZE]*/, int chn, List<typed.Float32List> buffer /*velky [2]*/)
 {
     int     i;
     int     jj = BLKSIZE / 8 - 1;
@@ -288,13 +288,13 @@ fft_long(lame_internal_flags const *const gfc,
     /* BLKSIZE/2 because of 3DNow! ASM routine */
 }
 
-#ifdef HAVE_NASM
-extern void fht_3DN(FLOAT * fz, int n);
-extern void fht_SSE(FLOAT * fz, int n);
-#endif
+//#ifdef HAVE_NASM
+//extern void fht_3DN(FLOAT * fz, int n);
+//extern void fht_SSE(FLOAT * fz, int n);
+//#endif
 
 void
-init_fft(lame_internal_flags * const gfc)
+init_fft(lame_internal_flags gfc)
 {
     int     i;
 
@@ -309,21 +309,4 @@ init_fft(lame_internal_flags * const gfc)
         window_s[i] = 0.5 * (1.0 - cos(2.0 * PI * (i + 0.5) / BLKSIZE_s));
 
     gfc->fft_fht = fht;
-#ifdef HAVE_NASM
-    if (gfc->CPU_features.AMD_3DNow) {
-        gfc->fft_fht = fht_3DN;
-    }
-    else if (gfc->CPU_features.SSE) {
-        gfc->fft_fht = fht_SSE;
-    }
-    else {
-        gfc->fft_fht = fht;
-    }
-#else
-#ifdef HAVE_XMMINTRIN_H
-#ifdef MIN_ARCH_SSE
-    gfc->fft_fht = fht_SSE2;
-#endif
-#endif
-#endif
 }

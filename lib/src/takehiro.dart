@@ -22,79 +22,84 @@
 
 /* $Id: takehiro.c,v 1.79 2011/05/07 16:05:17 rbrito Exp $ */
 
-#ifdef HAVE_CONFIG_H
-# include <config.h>
-#endif
+//#ifdef HAVE_CONFIG_H
+//# include <config.h>
+//#endif
+//
+//
+//#include "lame.h"
+//#include "machine.h"
+//#include "encoder.h"
+//#include "util.h"
+//#include "quantize_pvt.h"
+//#include "tables.h"
+
+part of libmp3lame;
+
+class subdv_table_t {
+  final int region0_count;
+  final int region1_count;
+  const subdv_table_t(this.region0_count, this.region1_count);
+}
 
 
-#include "lame.h"
-#include "machine.h"
-#include "encoder.h"
-#include "util.h"
-#include "quantize_pvt.h"
-#include "tables.h"
-
-
-static const struct {
-    const int region0_count;
-    const int region1_count;
-} subdv_table[23] = {
-    {
-    0, 0},              /* 0 bands */
-    {
-    0, 0},              /* 1 bands */
-    {
-    0, 0},              /* 2 bands */
-    {
-    0, 0},              /* 3 bands */
-    {
-    0, 0},              /* 4 bands */
-    {
-    0, 1},              /* 5 bands */
-    {
-    1, 1},              /* 6 bands */
-    {
-    1, 1},              /* 7 bands */
-    {
-    1, 2},              /* 8 bands */
-    {
-    2, 2},              /* 9 bands */
-    {
-    2, 3},              /* 10 bands */
-    {
-    2, 3},              /* 11 bands */
-    {
-    3, 4},              /* 12 bands */
-    {
-    3, 4},              /* 13 bands */
-    {
-    3, 4},              /* 14 bands */
-    {
-    4, 5},              /* 15 bands */
-    {
-    4, 5},              /* 16 bands */
-    {
-    4, 6},              /* 17 bands */
-    {
-    5, 6},              /* 18 bands */
-    {
-    5, 6},              /* 19 bands */
-    {
-    5, 7},              /* 20 bands */
-    {
-    6, 7},              /* 21 bands */
-    {
-    6, 7},              /* 22 bands */
-};
+const subdv_table = const List<subdv_table_t>.from([
+    const subdv_table_t(
+    0, 0),              /* 0 bands */
+    const subdv_table_t(
+    0, 0),              /* 1 bands */
+    const subdv_table_t(
+    0, 0),              /* 2 bands */
+    const subdv_table_t(
+    0, 0),              /* 3 bands */
+    const subdv_table_t(
+    0, 0),              /* 4 bands */
+    const subdv_table_t(
+    0, 1),              /* 5 bands */
+    const subdv_table_t(
+    1, 1),              /* 6 bands */
+    const subdv_table_t(
+    1, 1),              /* 7 bands */
+    const subdv_table_t(
+    1, 2),              /* 8 bands */
+    const subdv_table_t(
+    2, 2),              /* 9 bands */
+    const subdv_table_t(
+    2, 3),              /* 10 bands */
+    const subdv_table_t(
+    2, 3),              /* 11 bands */
+    const subdv_table_t(
+    3, 4),              /* 12 bands */
+    const subdv_table_t(
+    3, 4),              /* 13 bands */
+    const subdv_table_t(
+    3, 4),              /* 14 bands */
+    const subdv_table_t(
+    4, 5),              /* 15 bands */
+    const subdv_table_t(
+    4, 5),              /* 16 bands */
+    const subdv_table_t(
+    4, 6),              /* 17 bands */
+    const subdv_table_t(
+    5, 6),              /* 18 bands */
+    const subdv_table_t(
+    5, 6),              /* 19 bands */
+    const subdv_table_t(
+    5, 7),              /* 20 bands */
+    const subdv_table_t(
+    6, 7),              /* 21 bands */
+    const subdv_table_t(
+    6, 7),              /* 22 bands */
+], growable: false);
 
 
 
 
 
 /*********************************************************************
- * nonlinear quantization of xr 
+ * nonlinear quantization of xr
  * More accurate formula than the ISO formula.  Takes into account
- * the fact that we are quantizing xr -> ix, but we want ix^4/3 to be 
+ * the fact that we are quantizing xr -> ix, but we want ix^4/3 to be
  * as close as possible to x^4/3.  (taking the nearest int would mean
  * ix is as close as possible to xr, which is different.)
  *
@@ -110,19 +115,19 @@ static const struct {
 
 
 
-static void
-quantize_lines_xrpow_01(unsigned int l, FLOAT istep, const FLOAT * xr, int *ix)
+void
+quantize_lines_xrpow_01(int l, double istep, list<double> xr, List<int> ix)
 {
-    const FLOAT compareval0 = (1.0f - 0.4054f) / istep;
-    unsigned int i;
+    const FLOAT compareval0 = (1.0 - 0.4054) / istep;
+    int i;
 
     assert(l > 0);
     assert(l % 2 == 0);
     for (i = 0; i < l; i += 2) {
-        FLOAT const xr_0 = xr[i+0];
-        FLOAT const xr_1 = xr[i+1];
-        int const ix_0 = (compareval0 > xr_0) ? 0 : 1;
-        int const ix_1 = (compareval0 > xr_1) ? 0 : 1;
+      final double  xr_0 = xr[i+0];
+      final double xr_1 = xr[i+1];
+        final int ix_0 = (compareval0 > xr_0) ? 0 : 1;
+        final int ix_1 = (compareval0 > xr_1) ? 0 : 1;
         ix[i+0] = ix_0;
         ix[i+1] = ix_1;
     }
@@ -203,16 +208,16 @@ quantize_lines_xrpow(unsigned int l, FLOAT istep, const FLOAT * xp, int *pi)
 #else
 
 /*********************************************************************
- * XRPOW_FTOI is a macro to convert floats to ints.  
+ * XRPOW_FTOI is a macro to convert floats to ints.
  * if XRPOW_FTOI(x) = nearest_int(x), then QUANTFAC(x)=adj43asm[x]
  *                                         ROUNDFAC= -0.0946
  *
- * if XRPOW_FTOI(x) = floor(x), then QUANTFAC(x)=asj43[x]   
+ * if XRPOW_FTOI(x) = floor(x), then QUANTFAC(x)=asj43[x]
  *                                   ROUNDFAC=0.4054
  *
  * Note: using floor() or (int) is extremely slow. On machines where
  * the TAKEHIRO_IEEE754_HACK code above does not work, it is worthwile
- * to write some ASM for XRPOW_FTOI().  
+ * to write some ASM for XRPOW_FTOI().
  *********************************************************************/
 #define XRPOW_FTOI(src,dest) ((dest) = (int)(src))
 #define QUANTFAC(rx)  adj43[rx]
@@ -299,8 +304,8 @@ quantize_xrpow(const FLOAT * xp, int *pi, FLOAT istep, gr_info const *const cod_
 
 
     /* Reusing previously computed data does not seems to work if global gain
-       is changed. Finding why it behaves this way would allow to use a cache of 
-       previously computed values (let's 10 cached values per sfb) that would 
+       is changed. Finding why it behaves this way would allow to use a cache of
+       previously computed values (let's 10 cached values per sfb) that would
        probably provide a noticeable speedup */
     prev_data_use = (prev_noise && (cod_info->global_gain == prev_noise->global_gain));
 
@@ -382,7 +387,7 @@ quantize_xrpow(const FLOAT * xp, int *pi, FLOAT istep, gr_info const *const cod_
 
             if (l <= 0) {
                 /*  rh: 20040215
-                 *  may happen due to "prev_data_use" optimization 
+                 *  may happen due to "prev_data_use" optimization
                  */
                 if (accumulate01) {
                     quantize_lines_xrpow_01(accumulate01, istep, acc_xp, acc_iData);
@@ -569,7 +574,7 @@ count_bit_noESC_from3(const int *ix, const int *end, int max, unsigned int * s)
     }
     *s += sum1;
 
-    return t;  
+    return t;
 }
 
 
@@ -595,8 +600,8 @@ static int count_bit_null(const int* ix, const int* end, int max, unsigned int* 
 }
 
 typedef int (*count_fnc)(const int* ix, const int* end, int max, unsigned int* s);
-  
-static count_fnc count_fncs[] = 
+
+static count_fnc count_fncs[] =
 { &count_bit_null
 , &count_bit_noESC
 , &count_bit_noESC_from2
@@ -765,8 +770,8 @@ noquant_count_bits(lame_internal_flags const *const gfc,
 }
 
 int
-count_bits(lame_internal_flags const *const gfc,
-           const FLOAT * const xr, gr_info * const gi, calc_noise_data * prev_noise)
+count_bits(lame_internal_flags gfc,
+           const FLOAT * const xr, gr_info gi, calc_noise_data * prev_noise)
 {
     int    *const ix = gi->l3_enc;
 
@@ -1041,8 +1046,8 @@ best_scalefac_store(const lame_internal_flags * gfc,
         }
         if (l == j)
             gi->scalefac[sfb] = recalc = -2; /* anything goes. */
-        /*  only best_scalefac_store and calc_scfsi 
-         *  know--and only they should know--about the magic number -2. 
+        /*  only best_scalefac_store and calc_scfsi
+         *  know--and only they should know--about the magic number -2.
          */
     }
 

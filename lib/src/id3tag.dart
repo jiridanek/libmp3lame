@@ -31,38 +31,111 @@
 
 /* $Id: id3tag.c,v 1.75.2.2 2012/01/08 23:49:58 robert Exp $ */
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+//#ifdef HAVE_CONFIG_H
+//#include <config.h>
+//#endif
+//
+//#ifdef STDC_HEADERS
+//# include <stddef.h>
+//# include <stdlib.h>
+//# include <string.h>
+//# include <ctype.h>
+//#else
+//# ifndef HAVE_STRCHR
+//#  define strchr index
+//#  define strrchr rindex
+//# endif
+//char   *strchr(), *strrchr();
+//# ifndef HAVE_MEMCPY
+//#  define memcpy(d, s, n) bcopy ((s), (d), (n))
+//# endif
+//#endif
+//
+//
+//#include "lame.h"
+//#include "machine.h"
+//#include "encoder.h"
+//#include "id3tag.h"
+//#include "lame_global_flags.h"
+//#include "util.h"
+//#include "bitstream.h"
 
-#ifdef STDC_HEADERS
-# include <stddef.h>
-# include <stdlib.h>
-# include <string.h>
-# include <ctype.h>
-#else
-# ifndef HAVE_STRCHR
-#  define strchr index
-#  define strrchr rindex
-# endif
-char   *strchr(), *strrchr();
-# ifndef HAVE_MEMCPY
-#  define memcpy(d, s, n) bcopy ((s), (d), (n))
-# endif
-#endif
+
+part of libmp3lame;
+
+//lame_calloc(TYPE, COUNT) => ((TYPE*)calloc(COUNT, sizeof(TYPE)));
 
 
-#include "lame.h"
-#include "machine.h"
-#include "encoder.h"
-#include "id3tag.h"
-#include "lame_global_flags.h"
-#include "util.h"
-#include "bitstream.h"
+ CHANGED_FLAG =   (1 << 0);
+ ADD_V2_FLAG =    (1 << 1);
+ V1_ONLY_FLAG =   (1 << 2);
+ V2_ONLY_FLAG =   (1 << 3);
+ SPACE_V1_FLAG =  (1 << 4);
+ PAD_V2_FLAG =     (1 << 5);
 
-#define lame_calloc(TYPE, COUNT) ((TYPE*)calloc(COUNT, sizeof(TYPE)))
+class mimetype_t {
+  static const MIMETYPE_NONE = mimetype_t._(0);
+  static const MIMETYPE_JPEG = mimetype_t._(1);
+  static const MIMETYPE_PNG = mimetype_t._(2);
+  static const MIMETYPE_GIF = mimetype_t._(3);
 
-static const char *const genre_names[] = {
+  final int value;
+  const mimetype_t._(this.value);
+};
+
+class FrameDataNodeText {
+      data;
+
+}
+
+class FrameDataNodeTextLatin {
+}
+
+class FrameDataNodeTextUCS {
+}
+
+class FrameDataNodeTextRaw {
+}
+
+//          char   *l;       /* ptr to Latin-1 chars             */
+//          unsigned short *u; /* ptr to UCS-2 text                */
+//          unsigned char *b; /* ptr to raw bytes                 */
+//      } ptr;
+
+class FrameDataNode {
+    FrameDataNode nxt;
+    int fid;             /* Frame Identifier                 */
+    String    lng;          /* 3-character language descriptor  */
+    size_t  dim;
+    int     enc;         /* 0:Latin-1, 1:UCS-2, 2:RAW        */
+    FrameDataNodeText dsc, txt;
+}
+
+
+class id3tag_spec {
+    /* private data members */
+    int flags;
+    int     year;
+    String  title;
+    String  artist;
+    String  album;
+    String  comment;
+    int     track_id3v1;
+    int     genre_id3v1;
+    typed. char *albumart;
+    int albumart_size;
+    int padding_size;
+    int     albumart_mimetype;
+    FrameDataNode *v2_head, *v2_tail;
+};
+
+
+///* write tag into stream at current position */
+//extern int id3tag_write_v2(lame_global_flags * gfp);
+//extern int id3tag_write_v1(lame_global_flags * gfp);
+
+
+const genre_names = const [
     /*
      * NOTE: The spelling of these genre names is identical to those found in
      * Winamp and mp3info.
@@ -93,12 +166,11 @@ static const char *const genre_names[] = {
     "Heavy Metal", "Black Metal", "Crossover", "Contemporary Christian",
     "Christian Rock", "Merengue", "Salsa", "Thrash Metal", "Anime", "JPop",
     "SynthPop"
-};
+];
 
-#define GENRE_NAME_COUNT \
-    ((int)(sizeof genre_names / sizeof (const char *const)))
+const GENRE_NAME_COUNT = genre_names.length;
 
-static const int genre_alpha_map[] = {
+const genre_alpha_map = const [
     123, 34, 74, 73, 99, 20, 40, 26, 145, 90, 116, 41, 135, 85, 96, 138, 89, 0,
     107, 132, 65, 88, 104, 102, 97, 136, 61, 141, 32, 1, 112, 128, 57, 140, 2,
     139, 58, 3, 125, 50, 22, 4, 55, 127, 122, 120, 98, 52, 48, 54, 124, 25, 84,
@@ -108,51 +180,50 @@ static const int genre_alpha_map[] = {
     67, 93, 43, 121, 15, 68, 14, 16, 76, 87, 118, 17, 78, 143, 114, 110, 69, 21,
     111, 95, 105, 42, 37, 24, 56, 44, 101, 83, 94, 106, 147, 113, 18, 51, 130,
     144, 60, 70, 31, 72, 27, 28
-};
+];
 
-#define GENRE_ALPHA_COUNT ((int)(sizeof genre_alpha_map / sizeof (int)))
+const GENRE_ALPHA_COUNT = genre_alpha_map.length;
 
-#define GENRE_INDEX_OTHER 12
+const GENRE_INDEX_OTHER = 12;
 
+CODEPOINT(String s) => s.codeUnitAt(0);
+FRAME_ID(a, b, c, d) => CODEPOINT(a) << 24 | CODEPOINT(b) << 16 | CODEPOINT(c) <<  8 | CODEPOINT(d) << 0;
 
-#define FRAME_ID(a, b, c, d) \
-    ( ((unsigned long)(a) << 24) \
-    | ((unsigned long)(b) << 16) \
-    | ((unsigned long)(c) <<  8) \
-    | ((unsigned long)(d) <<  0) )
+class UsualStringIDs {
+  static const ID_TITLE = FRAME_ID('T', 'I', 'T', '2');
+  static const ID_ARTIST = FRAME_ID('T', 'P', 'E', '1');
+  static const ID_ALBUM = FRAME_ID('T', 'A', 'L', 'B');
+  static const ID_GENRE = FRAME_ID('T', 'C', 'O', 'N');
+  static const ID_ENCODER = FRAME_ID('T', 'S', 'S', 'E');
+  static const ID_PLAYLENGTH = FRAME_ID('T', 'L', 'E', 'N');
+  static const ID_COMMENT = FRAME_ID('C', 'O', 'M', 'M'); /* full text string */
+}
 
-typedef enum UsualStringIDs { ID_TITLE = FRAME_ID('T', 'I', 'T', '2')
-        , ID_ARTIST = FRAME_ID('T', 'P', 'E', '1')
-        , ID_ALBUM = FRAME_ID('T', 'A', 'L', 'B')
-        , ID_GENRE = FRAME_ID('T', 'C', 'O', 'N')
-        , ID_ENCODER = FRAME_ID('T', 'S', 'S', 'E')
-        , ID_PLAYLENGTH = FRAME_ID('T', 'L', 'E', 'N')
-        , ID_COMMENT = FRAME_ID('C', 'O', 'M', 'M') /* full text string */
-} UsualStringIDs;
+class NumericStringIDs {
+  static const ID_DATE = FRAME_ID('T', 'D', 'A', 'T'); /* "ddMM" */
+  static const ID_TIME = FRAME_ID('T', 'I', 'M', 'E'); /* "hhmm" */
+  static const ID_TPOS = FRAME_ID('T', 'P', 'O', 'S'); /* '0'-'9' and '/' allowed */
+  static const ID_TRACK = FRAME_ID('T', 'R', 'C', 'K'); /* '0'-'9' and '/' allowed */
+  static const ID_YEAR = FRAME_ID('T', 'Y', 'E', 'R'); /* "yyyy" */
+}
 
-typedef enum NumericStringIDs { ID_DATE = FRAME_ID('T', 'D', 'A', 'T') /* "ddMM" */
-        , ID_TIME = FRAME_ID('T', 'I', 'M', 'E') /* "hhmm" */
-        , ID_TPOS = FRAME_ID('T', 'P', 'O', 'S') /* '0'-'9' and '/' allowed */
-        , ID_TRACK = FRAME_ID('T', 'R', 'C', 'K') /* '0'-'9' and '/' allowed */
-        , ID_YEAR = FRAME_ID('T', 'Y', 'E', 'R') /* "yyyy" */
-} NumericStringIDs;
-
-typedef enum MiscIDs { ID_TXXX = FRAME_ID('T', 'X', 'X', 'X')
-        , ID_WXXX = FRAME_ID('W', 'X', 'X', 'X')
-        , ID_SYLT = FRAME_ID('S', 'Y', 'L', 'T')
-        , ID_APIC = FRAME_ID('A', 'P', 'I', 'C')
-        , ID_GEOB = FRAME_ID('G', 'E', 'O', 'B')
-        , ID_PCNT = FRAME_ID('P', 'C', 'N', 'T')
-        , ID_AENC = FRAME_ID('A', 'E', 'N', 'C')
-        , ID_LINK = FRAME_ID('L', 'I', 'N', 'K')
-        , ID_ENCR = FRAME_ID('E', 'N', 'C', 'R')
-        , ID_GRID = FRAME_ID('G', 'R', 'I', 'D')
-        , ID_PRIV = FRAME_ID('P', 'R', 'I', 'V')
-        , ID_VSLT = FRAME_ID('V', 'S', 'L', 'T') /* full text string */
-        , ID_USER = FRAME_ID('U', 'S', 'E', 'R') /* full text string */
-        , ID_PCST = FRAME_ID('P', 'C', 'S', 'T') /* iTunes Podcast indicator, only presence important */
-        , ID_WFED = FRAME_ID('W', 'F', 'E', 'D') /* iTunes Podcast URL as TEXT FRAME !!! violates standard */
-} MiscIDs;
+class MiscIDs {
+  static const ID_TXXX = FRAME_ID('T', 'X', 'X', 'X');
+  static const ID_WXXX = FRAME_ID('W', 'X', 'X', 'X');
+  static const ID_SYLT = FRAME_ID('S', 'Y', 'L', 'T');
+  static const ID_APIC = FRAME_ID('A', 'P', 'I', 'C');
+  static const ID_GEOB = FRAME_ID('G', 'E', 'O', 'B');
+  static const ID_PCNT = FRAME_ID('P', 'C', 'N', 'T');
+  static const ID_AENC = FRAME_ID('A', 'E', 'N', 'C');
+  static const ID_LINK = FRAME_ID('L', 'I', 'N', 'K');
+  static const ID_ENCR = FRAME_ID('E', 'N', 'C', 'R');
+  static const ID_GRID = FRAME_ID('G', 'R', 'I', 'D');
+  static const ID_PRIV = FRAME_ID('P', 'R', 'I', 'V');
+  static const ID_VSLT = FRAME_ID('V', 'S', 'L', 'T'); /* full text string */
+  static const ID_USER = FRAME_ID('U', 'S', 'E', 'R'); /* full text string */
+  static const ID_PCST = FRAME_ID('P', 'C', 'S', 'T'); /* iTunes Podcast indicator, only presence important */
+  static const ID_WFED = FRAME_ID('W', 'F', 'E', 'D'); /* iTunes Podcast URL as TEXT FRAME !!! violates standard */
+}
 
 
 static int
@@ -160,8 +231,8 @@ frame_id_matches(int id, int mask)
 {
     int     result = 0, i, window = 0xff;
     for (i = 0; i < 4; ++i, window <<= 8) {
-        int const mw = (mask & window);
-        int const iw = (id & window);
+        const int mw = (mask & window);
+        const int iw = (id & window);
         if (mw != 0 && mw != iw) {
             result |= iw;
         }
@@ -169,50 +240,50 @@ frame_id_matches(int id, int mask)
     return result;
 }
 
-static int
+int
 isFrameIdMatching(int id, int mask)
 {
     return frame_id_matches(id, mask) == 0 ? 1 : 0;
 }
 
-static int
-test_tag_spec_flags(lame_internal_flags const *gfc, unsigned int tst)
+int
+test_tag_spec_flags(lame_internal_flags gfc, int tst)
 {
-    return (gfc->tag_spec.flags & tst) != 0u ? 1 : 0;
+    return (gfc.tag_spec.flags & tst) != 0 ? 1 : 0;
 }
 
-#if 0
-static void
-debug_tag_spec_flags(lame_internal_flags * gfc, const char* info)
+//#if 0
+//static void
+//debug_tag_spec_flags(lame_internal_flags * gfc, const char* info)
+//{
+//    MSGF(gfc, "%s\n", info);
+//    MSGF(gfc, "CHANGED_FLAG  : %d\n", test_tag_spec_flags(gfc, CHANGED_FLAG ));
+//    MSGF(gfc, "ADD_V2_FLAG   : %d\n", test_tag_spec_flags(gfc, ADD_V2_FLAG  ));
+//    MSGF(gfc, "V1_ONLY_FLAG  : %d\n", test_tag_spec_flags(gfc, V1_ONLY_FLAG ));
+//    MSGF(gfc, "V2_ONLY_FLAG  : %d\n", test_tag_spec_flags(gfc, V2_ONLY_FLAG ));
+//    MSGF(gfc, "SPACE_V1_FLAG : %d\n", test_tag_spec_flags(gfc, SPACE_V1_FLAG));
+//    MSGF(gfc, "PAD_V2_FLAG   : %d\n", test_tag_spec_flags(gfc, PAD_V2_FLAG  ));
+//}
+//#endif
+
+
+
+//static int
+//id3v2_add_ucs2(lame_t gfp, uint32_t frame_id, char const *lang, unsigned short const *desc, unsigned short const *text);
+//static int
+//id3v2_add_latin1(lame_t gfp, uint32_t frame_id, char const *lang, char const *desc, char const *text);
+
+void
+copyV1ToV2(lame_t gfp, int frame_id, /*char*/int s)
 {
-    MSGF(gfc, "%s\n", info);
-    MSGF(gfc, "CHANGED_FLAG  : %d\n", test_tag_spec_flags(gfc, CHANGED_FLAG )); 
-    MSGF(gfc, "ADD_V2_FLAG   : %d\n", test_tag_spec_flags(gfc, ADD_V2_FLAG  )); 
-    MSGF(gfc, "V1_ONLY_FLAG  : %d\n", test_tag_spec_flags(gfc, V1_ONLY_FLAG )); 
-    MSGF(gfc, "V2_ONLY_FLAG  : %d\n", test_tag_spec_flags(gfc, V2_ONLY_FLAG )); 
-    MSGF(gfc, "SPACE_V1_FLAG : %d\n", test_tag_spec_flags(gfc, SPACE_V1_FLAG)); 
-    MSGF(gfc, "PAD_V2_FLAG   : %d\n", test_tag_spec_flags(gfc, PAD_V2_FLAG  )); 
-}
-#endif
-
-
-
-static int
-id3v2_add_ucs2(lame_t gfp, uint32_t frame_id, char const *lang, unsigned short const *desc, unsigned short const *text);
-static int
-id3v2_add_latin1(lame_t gfp, uint32_t frame_id, char const *lang, char const *desc, char const *text);
-
-static void
-copyV1ToV2(lame_t gfp, int frame_id, char const *s)
-{
-    lame_internal_flags *gfc = gfp != 0 ? gfp->internal_flags : 0;
+    lame_internal_flags *gfc = gfp != 0 ? gfp.internal_flags : 0;
     if (gfc != 0) {
-        unsigned int flags = gfc->tag_spec.flags;
+        unsigned int flags = gfc.tag_spec.flags;
         id3v2_add_latin1(gfp, frame_id, "XXX", 0, s);
-        gfc->tag_spec.flags = flags;
-#if 0
-        debug_tag_spec_flags(gfc, "copyV1ToV2");
-#endif
+        gfc.tag_spec.flags = flags;
+//#if 0
+//        debug_tag_spec_flags(gfc, "copyV1ToV2");
+//#endif
     }
 }
 
@@ -221,10 +292,10 @@ static void
 id3v2AddLameVersion(lame_t gfp)
 {
     char    buffer[1024];
-    const char *b = get_lame_os_bitness();
-    const char *v = get_lame_version();
-    const char *u = get_lame_url();
-    const size_t lenb = strlen(b);
+    final String b = get_lame_os_bitness();
+    final String v = get_lame_version();
+    final String u = get_lame_url();
+    final int lenb = b.length;
 
     if (lenb > 0) {
         sprintf(buffer, "LAME %s version %s (%s)", b, v, u);
@@ -238,14 +309,14 @@ id3v2AddLameVersion(lame_t gfp)
 static void
 id3v2AddAudioDuration(lame_t gfp, double ms)
 {
-    lame_internal_flags *gfc = gfp != 0 ? gfp->internal_flags : 0;
-    SessionConfig_t const *const cfg = &gfc->cfg;
+    lame_internal_flags = gfp != 0 ? gfp.internal_flags : 0;
+    SessionConfig_t cfg = gfc.cfg;
     char    buffer[1024];
     double const max_ulong = MAX_U_32_NUM;
     unsigned long playlength_ms;
 
     ms *= 1000;
-    ms /= cfg->samplerate_in;
+    ms /= cfg.samplerate_in;
     if (ms > max_ulong) {
         playlength_ms = max_ulong;
     }
@@ -260,7 +331,7 @@ id3v2AddAudioDuration(lame_t gfp, double ms)
 }
 
 void
-id3tag_genre_list(void (*handler) (int, const char *, void *), void *cookie)
+id3tag_genre_list(void handler(int, String, dynamic), dynamic cookie)
 {
     if (handler) {
         int     i;
@@ -273,18 +344,18 @@ id3tag_genre_list(void (*handler) (int, const char *, void *), void *cookie)
     }
 }
 
-#define GENRE_NUM_UNKNOWN 255
+const GENRE_NUM_UNKNOWN = 255;
 
 
 
 void
 id3tag_init(lame_t gfp)
 {
-    lame_internal_flags *gfc = gfp->internal_flags;
+    lame_internal_flags *gfc = gfp.internal_flags;
     free_id3tag(gfc);
-    memset(&gfc->tag_spec, 0, sizeof gfc->tag_spec);
-    gfc->tag_spec.genre_id3v1 = GENRE_NUM_UNKNOWN;
-    gfc->tag_spec.padding_size = 128;
+    memset(&gfc.tag_spec, 0, sizeof gfc.tag_spec);
+    gfc.tag_spec.genre_id3v1 = GENRE_NUM_UNKNOWN;
+    gfc.tag_spec.padding_size = 128;
     id3v2AddLameVersion(gfp);
 }
 
@@ -293,33 +364,33 @@ id3tag_init(lame_t gfp)
 void
 id3tag_add_v2(lame_t gfp)
 {
-    lame_internal_flags *gfc = gfp->internal_flags;
-    gfc->tag_spec.flags &= ~V1_ONLY_FLAG;
-    gfc->tag_spec.flags |= ADD_V2_FLAG;
+    lame_internal_flags *gfc = gfp.internal_flags;
+    gfc.tag_spec.flags &= ~V1_ONLY_FLAG;
+    gfc.tag_spec.flags |= ADD_V2_FLAG;
 }
 
 void
 id3tag_v1_only(lame_t gfp)
 {
-    lame_internal_flags *gfc = gfp->internal_flags;
-    gfc->tag_spec.flags &= ~(ADD_V2_FLAG | V2_ONLY_FLAG);
-    gfc->tag_spec.flags |= V1_ONLY_FLAG;
+    lame_internal_flags gfc = gfp.internal_flags;
+    gfc.tag_spec.flags &= ~(ADD_V2_FLAG | V2_ONLY_FLAG);
+    gfc.tag_spec.flags |= V1_ONLY_FLAG;
 }
 
 void
 id3tag_v2_only(lame_t gfp)
 {
-    lame_internal_flags *gfc = gfp->internal_flags;
-    gfc->tag_spec.flags &= ~V1_ONLY_FLAG;
-    gfc->tag_spec.flags |= V2_ONLY_FLAG;
+    lame_internal_flags gfc = gfp.internal_flags;
+    gfc.tag_spec.flags &= ~V1_ONLY_FLAG;
+    gfc.tag_spec.flags |= V2_ONLY_FLAG;
 }
 
 void
 id3tag_space_v1(lame_t gfp)
 {
-    lame_internal_flags *gfc = gfp->internal_flags;
-    gfc->tag_spec.flags &= ~V2_ONLY_FLAG;
-    gfc->tag_spec.flags |= SPACE_V1_FLAG;
+    lame_internal_flags gfc = gfp.internal_flags;
+    gfc.tag_spec.flags &= ~V2_ONLY_FLAG;
+    gfc.tag_spec.flags |= SPACE_V1_FLAG;
 }
 
 void
@@ -331,17 +402,17 @@ id3tag_pad_v2(lame_t gfp)
 void
 id3tag_set_pad(lame_t gfp, size_t n)
 {
-    lame_internal_flags *gfc = gfp->internal_flags;
-    gfc->tag_spec.flags &= ~V1_ONLY_FLAG;
-    gfc->tag_spec.flags |= PAD_V2_FLAG;
-    gfc->tag_spec.flags |= ADD_V2_FLAG;
-    gfc->tag_spec.padding_size = (unsigned int)n;
+    lame_internal_flags gfc = gfp.internal_flags;
+    gfc.tag_spec.flags &= ~V1_ONLY_FLAG;
+    gfc.tag_spec.flags |= PAD_V2_FLAG;
+    gfc.tag_spec.flags |= ADD_V2_FLAG;
+    gfc.tag_spec.padding_size = (unsigned int)n;
 }
 
 static int
 hasUcs2ByteOrderMarker(unsigned short bom)
 {
-    if (bom == 0xFFFEu || bom == 0xFEFFu) {
+    if (bom == 0xFFFE || bom == 0xFEFF) {
         return 1;
     }
     return 0;
@@ -349,32 +420,32 @@ hasUcs2ByteOrderMarker(unsigned short bom)
 
 
 static unsigned short
-swap_bytes(unsigned short w)
+swap_bytes(int w)
 {
-    return (0xff00u & (w << 8)) | (0x00ffu & (w >> 8));
+    return (0xff00 & (w << 8)) | (0x00ff & (w >> 8));
 }
 
 
-static unsigned short
-toLittleEndian(unsigned short bom, unsigned short c)
+int
+toLittleEndian(int bom, int c)
 {
-    if (bom == 0xFFFEu) {
+    if (bom == 0xFFFE) {
         return swap_bytes(c);
     }
     return c;
 }
 
-static unsigned short
-fromLatin1Char(const unsigned short* s, unsigned short c)
+int
+fromLatin1Char(typed.Uint16List s, int c)
 {
-    if (s[0] == 0xFFFEu) {
+    if (s[0] == 0xFFFE) {
         return swap_bytes(c);
     }
     return c;
 }
 
 
-static  size_t
+int
 local_strdup(char **dst, const char *src)
 {
     if (dst == 0) {
@@ -399,7 +470,7 @@ local_strdup(char **dst, const char *src)
     return 0;
 }
 
-static  size_t
+int
 local_ucs2_strdup(unsigned short **dst, unsigned short const *src)
 {
     if (dst == 0) {
@@ -426,7 +497,7 @@ local_ucs2_strdup(unsigned short **dst, unsigned short const *src)
 }
 
 
-static  size_t
+int
 local_ucs2_strlen(unsigned short const *s)
 {
     size_t  n = 0;
@@ -439,7 +510,7 @@ local_ucs2_strlen(unsigned short const *s)
 }
 
 
-static size_t
+int
 local_ucs2_substr(unsigned short** dst, unsigned short const* src, size_t start, size_t end)
 {
     size_t const len = 1 + 1 + ((start < end) ? (end - start) : 0);
@@ -462,8 +533,8 @@ local_ucs2_substr(unsigned short** dst, unsigned short const* src, size_t start,
     return n;
 }
 
-static int
-local_ucs2_pos(unsigned short const* str, unsigned short c)
+int
+local_ucs2_pos(typed.Uint16List str, int c)
 {
     int     i;
     for (i = 0; str != 0 && str[i] != 0; ++i) {
@@ -474,8 +545,8 @@ local_ucs2_pos(unsigned short const* str, unsigned short c)
     return -1;
 }
 
-static int
-local_char_pos(char const* str, char c)
+int
+local_char_pos(typed.Uint8List str, int c)
 {
     int     i;
     for (i = 0; str != 0 && str[i] != 0; ++i) {
@@ -486,27 +557,27 @@ local_char_pos(char const* str, char c)
     return -1;
 }
 
-static int
-maybeLatin1(unsigned short const* text)
+bool
+maybeLatin1(typed.Uint8List text)
 {
     if (text) {
         unsigned short bom = *text++;
         while (*text) {
             unsigned short c = toLittleEndian(bom, *text++);
-            if (c > 0x00fe) return 0;
+            if (c > 0x00fe) return false;
         }
     }
-    return 1;
+    return true;
 }
 
-static int searchGenre(char const* genre);
-static int sloppySearchGenre(char const* genre);
+//static int searchGenre(char const* genre);
+//static int sloppySearchGenre(char const* genre);
 
-static int
-lookupGenre(char const* genre)
+int
+lookupGenre(String genre)
 {
     char   *str;
-    int     num = strtol(genre, &str, 10);
+    int     num = int.parse(num //strtol(genre, &str, 10);
     /* is the input a string or a valid number? */
     if (*str) {
         num = searchGenre(genre);
@@ -525,13 +596,13 @@ lookupGenre(char const* genre)
     return num;
 }
 
-static unsigned char *
-writeLoBytes(unsigned char *frame, unsigned short const *str, size_t n);
+//static unsigned char *
+//writeLoBytes(typed.Uint8List frame, unsigned short const *str, size_t n);
 
 static char*
-local_strdup_utf16_to_latin1(unsigned short const* utf16)
+local_strdup_utf16_to_latin1(typed.Uint16List utf16)
 {
-    size_t  len = local_ucs2_strlen(utf16);
+    int  len = local_ucs2_strlen(utf16);
     unsigned char* latin1 = lame_calloc(unsigned char, len+1);
     writeLoBytes(latin1, utf16, len);
     return (char*)latin1;
@@ -539,9 +610,9 @@ local_strdup_utf16_to_latin1(unsigned short const* utf16)
 
 
 static int
-id3tag_set_genre_utf16(lame_t gfp, unsigned short const* text)
+id3tag_set_genre_utf16(lame_t gfp, typed.Uint16List text)
 {
-    lame_internal_flags* gfc = gfp->internal_flags;
+    lame_internal_flags* gfc = gfp.internal_flags;
     int   ret;
     if (text == 0) {
         return -3;
@@ -555,16 +626,16 @@ id3tag_set_genre_utf16(lame_t gfp, unsigned short const* text)
         free(latin1);
         if (num == -1) return -1; /* number out of range */
         if (num >= 0) {           /* common genre found  */
-            gfc->tag_spec.flags |= CHANGED_FLAG;
-            gfc->tag_spec.genre_id3v1 = num;
+            gfc.tag_spec.flags |= CHANGED_FLAG;
+            gfc.tag_spec.genre_id3v1 = num;
             copyV1ToV2(gfp, ID_GENRE, genre_names[num]);
             return 0;
         }
     }
     ret = id3v2_add_ucs2(gfp, ID_GENRE, 0, 0, text);
     if (ret == 0) {
-        gfc->tag_spec.flags |= CHANGED_FLAG;
-        gfc->tag_spec.genre_id3v1 = GENRE_INDEX_OTHER;
+        gfc.tag_spec.flags |= CHANGED_FLAG;
+        gfc.tag_spec.genre_id3v1 = GENRE_INDEX_OTHER;
     }
     return ret;
 }
@@ -585,7 +656,7 @@ id3tag_set_albumart(lame_t gfp, const char *image, size_t size)
 {
     int     mimetype = 0;
     unsigned char const *data = (unsigned char const *) image;
-    lame_internal_flags *gfc = gfp->internal_flags;
+    lame_internal_flags *gfc = gfp.internal_flags;
 
     /* determine MIME type from the actual image data */
     if (2 < size && data[0] == 0xFF && data[1] == 0xD8) {
@@ -600,38 +671,38 @@ id3tag_set_albumart(lame_t gfp, const char *image, size_t size)
     else {
         return -1;
     }
-    if (gfc->tag_spec.albumart != 0) {
-        free(gfc->tag_spec.albumart);
-        gfc->tag_spec.albumart = 0;
-        gfc->tag_spec.albumart_size = 0;
-        gfc->tag_spec.albumart_mimetype = MIMETYPE_NONE;
+    if (gfc.tag_spec.albumart != 0) {
+        free(gfc.tag_spec.albumart);
+        gfc.tag_spec.albumart = 0;
+        gfc.tag_spec.albumart_size = 0;
+        gfc.tag_spec.albumart_mimetype = MIMETYPE_NONE;
     }
     if (size < 1) {
         return 0;
     }
-    gfc->tag_spec.albumart = lame_calloc(unsigned char, size);
-    if (gfc->tag_spec.albumart != 0) {
-        memcpy(gfc->tag_spec.albumart, image, size);
-        gfc->tag_spec.albumart_size = (unsigned int)size;
-        gfc->tag_spec.albumart_mimetype = mimetype;
-        gfc->tag_spec.flags |= CHANGED_FLAG;
+    gfc.tag_spec.albumart = lame_calloc(unsigned char, size);
+    if (gfc.tag_spec.albumart != 0) {
+        memcpy(gfc.tag_spec.albumart, image, size);
+        gfc.tag_spec.albumart_size = (unsigned int)size;
+        gfc.tag_spec.albumart_mimetype = mimetype;
+        gfc.tag_spec.flags |= CHANGED_FLAG;
         id3tag_add_v2(gfp);
     }
     return 0;
 }
 
 static unsigned char *
-set_4_byte_value(unsigned char *bytes, uint32_t value)
+set_4_byte_value(typed.Uint8List bytes, int value)
 {
     int     i;
     for (i = 3; i >= 0; --i) {
-        bytes[i] = value & 0xffUL;
+        bytes[i] = value & 0xff;
         value >>= 8;
     }
     return bytes + 4;
 }
 
-static uint32_t
+int
 toID3v2TagId(char const *s)
 {
     unsigned int i, x = 0;
@@ -653,7 +724,7 @@ toID3v2TagId(char const *s)
 }
 
 static uint32_t
-toID3v2TagId_ucs2(unsigned short const *s)
+toID3v2TagId_ucs2(typed.Uint16List s)
 {
     unsigned int i, x = 0;
     unsigned short bom = 0;
@@ -677,21 +748,21 @@ toID3v2TagId_ucs2(unsigned short const *s)
     return x;
 }
 
-#if 0
-static int
-isNumericString(uint32_t frame_id)
-{
-    switch (frame_id) {
-    case ID_DATE:
-    case ID_TIME:
-    case ID_TPOS:
-    case ID_TRACK:
-    case ID_YEAR:
-        return 1;
-    }
-    return 0;
-}
-#endif
+//#if 0
+//static int
+//isNumericString(uint32_t frame_id)
+//{
+//    switch (frame_id) {
+//    case ID_DATE:
+//    case ID_TIME:
+//    case ID_TPOS:
+//    case ID_TRACK:
+//    case ID_YEAR:
+//        return 1;
+//    }
+//    return 0;
+//}
+//#endif
 
 static int
 isMultiFrame(uint32_t frame_id)
@@ -714,163 +785,163 @@ isMultiFrame(uint32_t frame_id)
     return 0;
 }
 
-#if 0
-static int
-isFullTextString(int frame_id)
-{
-    switch (frame_id) {
-    case ID_VSLT:
-    case ID_COMMENT:
-        return 1;
-    }
-    return 0;
-}
-#endif
+//#if 0
+//static int
+//isFullTextString(int frame_id)
+//{
+//    switch (frame_id) {
+//    case ID_VSLT:
+//    case ID_COMMENT:
+//        return 1;
+//    }
+//    return 0;
+//}
+//#endif
 
-static FrameDataNode *
-findNode(id3tag_spec const *tag, uint32_t frame_id, FrameDataNode const *last)
+FrameDataNode
+findNode(id3tag_spec tag, uint32_t frame_id, FrameDataNode last)
 {
-    FrameDataNode *node = last ? last->nxt : tag->v2_head;
+    FrameDataNode *node = last ? last.nxt : tag.v2_head;
     while (node != 0) {
-        if (node->fid == frame_id) {
+        if (node.fid == frame_id) {
             return node;
         }
-        node = node->nxt;
+        node = node.nxt;
     }
     return 0;
 }
 
-static void
-appendNode(id3tag_spec * tag, FrameDataNode * node)
+void
+appendNode(id3tag_spec tag, FrameDataNode node)
 {
-    if (tag->v2_tail == 0 || tag->v2_head == 0) {
-        tag->v2_head = node;
-        tag->v2_tail = node;
+    if (tag.v2_tail == 0 || tag.v2_head == 0) {
+        tag.v2_head = node;
+        tag.v2_tail = node;
     }
     else {
-        tag->v2_tail->nxt = node;
-        tag->v2_tail = node;
+        tag.v2_tail.nxt = node;
+        tag.v2_tail = node;
     }
 }
 
-static void
-setLang(char *dst, char const *src)
-{
-    int     i;
-    if (src == 0 || src[0] == 0) {
-        dst[0] = 'X';
-        dst[1] = 'X';
-        dst[2] = 'X';
-    }
-    else {
-        for (i = 0; i < 3 && src && *src; ++i) {
-            dst[i] = src[i];
-        }
-        for (; i < 3; ++i) {
-            dst[i] = ' ';
-        }
-    }
-}
+//void
+//setLang(char *dst, char const *src)
+//{
+//    int     i;
+//    if (src == 0 || src[0] == 0) {
+//        dst[0] = 'X';
+//        dst[1] = 'X';
+//        dst[2] = 'X';
+//    }
+//    else {
+//        for (i = 0; i < 3 && src && *src; ++i) {
+//            dst[i] = src[i];
+//        }
+//        for (; i < 3; ++i) {
+//            dst[i] = ' ';
+//        }
+//    }
+//}
 
-static int
-isSameLang(char const *l1, char const *l2)
-{
-    char    d[3];
-    int     i;
-    setLang(d, l2);
-    for (i = 0; i < 3; ++i) {
-        char    a = tolower(l1[i]);
-        char    b = tolower(d[i]);
-        if (a < ' ')
-            a = ' ';
-        if (b < ' ')
-            b = ' ';
-        if (a != b) {
-            return 0;
-        }
-    }
-    return 1;
-}
+//static int
+//isSameLang(char const *l1, char const *l2)
+//{
+//    char    d[3];
+//    int     i;
+//    setLang(d, l2);
+//    for (i = 0; i < 3; ++i) {
+//        char    a = tolower(l1[i]);
+//        char    b = tolower(d[i]);
+//        if (a < ' ')
+//            a = ' ';
+//        if (b < ' ')
+//            b = ' ';
+//        if (a != b) {
+//            return 0;
+//        }
+//    }
+//    return 1;
+//}
 
-static int
-isSameDescriptor(FrameDataNode const *node, char const *dsc)
-{
-    size_t  i;
-    if (node->dsc.enc == 1 && node->dsc.dim > 0) {
-        return 0;
-    }
-    for (i = 0; i < node->dsc.dim; ++i) {
-        if (!dsc || node->dsc.ptr.l[i] != dsc[i]) {
-            return 0;
-        }
-    }
-    return 1;
-}
+//static int
+//isSameDescriptor(FrameDataNode const *node, char const *dsc)
+//{
+//    size_t  i;
+//    if (node.dsc.enc == 1 && node.dsc.dim > 0) {
+//        return 0;
+//    }
+//    for (i = 0; i < node.dsc.dim; ++i) {
+//        if (!dsc || node.dsc.ptr.l[i] != dsc[i]) {
+//            return 0;
+//        }
+//    }
+//    return 1;
+//}
 
-static int
-isSameDescriptorUcs2(FrameDataNode const *node, unsigned short const *dsc)
-{
-    size_t  i;
-    if (node->dsc.enc != 1 && node->dsc.dim > 0) {
-        return 0;
-    }
-    for (i = 0; i < node->dsc.dim; ++i) {
-        if (!dsc || node->dsc.ptr.u[i] != dsc[i]) {
-            return 0;
-        }
-    }
-    return 1;
-}
+//static int
+//isSameDescriptorUcs2(FrameDataNode const *node, unsigned short const *dsc)
+//{
+//    size_t  i;
+//    if (node.dsc.enc != 1 && node.dsc.dim > 0) {
+//        return 0;
+//    }
+//    for (i = 0; i < node.dsc.dim; ++i) {
+//        if (!dsc || node.dsc.ptr.u[i] != dsc[i]) {
+//            return 0;
+//        }
+//    }
+//    return 1;
+//}
 
-static int
-id3v2_add_ucs2(lame_t gfp, uint32_t frame_id, char const *lang, unsigned short const *desc, unsigned short const *text)
-{
-    lame_internal_flags *gfc = gfp != 0 ? gfp->internal_flags : 0;
-    if (gfc != 0) {
-        FrameDataNode *node = findNode(&gfc->tag_spec, frame_id, 0);
-        if (isMultiFrame(frame_id)) {
-            while (node) {
-                if (isSameLang(node->lng, lang)) {
-                    if (isSameDescriptorUcs2(node, desc)) {
-                        break;
-                    }
-                }
-                node = findNode(&gfc->tag_spec, frame_id, node);
-            }
-        }
-        if (node == 0) {
-            node = lame_calloc(FrameDataNode, 1);
-            if (node == 0) {
-                return -254; /* memory problem */
-            }
-            appendNode(&gfc->tag_spec, node);
-        }
-        node->fid = frame_id;
-        setLang(node->lng, lang);
-        node->dsc.dim = local_ucs2_strdup(&node->dsc.ptr.u, desc);
-        node->dsc.enc = 1;
-        node->txt.dim = local_ucs2_strdup(&node->txt.ptr.u, text);
-        node->txt.enc = 1;
-        gfc->tag_spec.flags |= (CHANGED_FLAG | ADD_V2_FLAG);
-        return 0;
-    }
-    return -255;
-}
+//static int
+//id3v2_add_ucs2(lame_t gfp, uint32_t frame_id, char const *lang, unsigned short const *desc, unsigned short const *text)
+//{
+//    lame_internal_flags *gfc = gfp != 0 ? gfp.internal_flags : 0;
+//    if (gfc != 0) {
+//        FrameDataNode *node = findNode(&gfc.tag_spec, frame_id, 0);
+//        if (isMultiFrame(frame_id)) {
+//            while (node) {
+//                if (isSameLang(node.lng, lang)) {
+//                    if (isSameDescriptorUcs2(node, desc)) {
+//                        break;
+//                    }
+//                }
+//                node = findNode(&gfc.tag_spec, frame_id, node);
+//            }
+//        }
+//        if (node == 0) {
+//            node = lame_calloc(FrameDataNode, 1);
+//            if (node == 0) {
+//                return -254; /* memory problem */
+//            }
+//            appendNode(&gfc.tag_spec, node);
+//        }
+//        node.fid = frame_id;
+//        setLang(node.lng, lang);
+//        node.dsc.dim = local_ucs2_strdup(&node.dsc.ptr.u, desc);
+//        node.dsc.enc = 1;
+//        node.txt.dim = local_ucs2_strdup(&node.txt.ptr.u, text);
+//        node.txt.enc = 1;
+//        gfc.tag_spec.flags |= (CHANGED_FLAG | ADD_V2_FLAG);
+//        return 0;
+//    }
+//    return -255;
+//}
 
 static int
 id3v2_add_latin1(lame_t gfp, uint32_t frame_id, char const *lang, char const *desc, char const *text)
 {
-    lame_internal_flags *gfc = gfp != 0 ? gfp->internal_flags : 0;
+    lame_internal_flags *gfc = gfp != 0 ? gfp.internal_flags : 0;
     if (gfc != 0) {
-        FrameDataNode *node = findNode(&gfc->tag_spec, frame_id, 0);
+        FrameDataNode *node = findNode(&gfc.tag_spec, frame_id, 0);
         if (isMultiFrame(frame_id)) {
             while (node) {
-                if (isSameLang(node->lng, lang)) {
+                if (isSameLang(node.lng, lang)) {
                     if (isSameDescriptor(node, desc)) {
                         break;
                     }
                 }
-                node = findNode(&gfc->tag_spec, frame_id, node);
+                node = findNode(&gfc.tag_spec, frame_id, node);
             }
         }
         if (node == 0) {
@@ -878,15 +949,15 @@ id3v2_add_latin1(lame_t gfp, uint32_t frame_id, char const *lang, char const *de
             if (node == 0) {
                 return -254; /* memory problem */
             }
-            appendNode(&gfc->tag_spec, node);
+            appendNode(&gfc.tag_spec, node);
         }
-        node->fid = frame_id;
-        setLang(node->lng, lang);
-        node->dsc.dim = local_strdup(&node->dsc.ptr.l, desc);
-        node->dsc.enc = 0;
-        node->txt.dim = local_strdup(&node->txt.ptr.l, text);
-        node->txt.enc = 0;
-        gfc->tag_spec.flags |= (CHANGED_FLAG | ADD_V2_FLAG);
+        node.fid = frame_id;
+        setLang(node.lng, lang);
+        node.dsc.dim = local_strdup(&node.dsc.ptr.l, desc);
+        node.dsc.enc = 0;
+        node.txt.dim = local_strdup(&node.txt.ptr.l, text);
+        node.txt.enc = 0;
+        gfc.tag_spec.flags |= (CHANGED_FLAG | ADD_V2_FLAG);
         return 0;
     }
     return -255;
@@ -916,7 +987,7 @@ id3tag_set_userinfo_ucs2(lame_t gfp, uint32_t id, unsigned short const *fieldval
     int     rc = -7;
     size_t  b = local_ucs2_strlen(fieldvalue);
     int     a = local_ucs2_pos(fieldvalue, separator);
-    if (a >= 0) { 
+    if (a >= 0) {
         unsigned short* dsc = 0, *val = 0;
         local_ucs2_substr(&dsc, fieldvalue, 0, a);
         local_ucs2_substr(&val, fieldvalue, a+1, b);
@@ -928,9 +999,9 @@ id3tag_set_userinfo_ucs2(lame_t gfp, uint32_t id, unsigned short const *fieldval
 }
 
 int
-id3tag_set_textinfo_utf16(lame_t gfp, char const *id, unsigned short const *text)
+id3tag_set_textinfo_utf16(lame_t gfp, char const *id, typed.Uint16List text)
 {
-    uint32_t const frame_id = toID3v2TagId(id);
+    final int frame_id = toID3v2TagId(id);
     if (frame_id == 0) {
         return -1;
     }
@@ -957,21 +1028,21 @@ id3tag_set_textinfo_utf16(lame_t gfp, char const *id, unsigned short const *text
     }
     if (isFrameIdMatching(frame_id, FRAME_ID('T', 0, 0, 0))
       ||isFrameIdMatching(frame_id, FRAME_ID('W', 0, 0, 0))) {
-#if 0
-        if (isNumericString(frame_id)) {
-            return -2;  /* must be Latin-1 encoded */
-        }
-#endif
+//#if 0
+//        if (isNumericString(frame_id)) {
+//            return -2;  /* must be Latin-1 encoded */
+//        }
+//#endif
         return id3v2_add_ucs2(gfp, frame_id, 0, 0, text);
     }
     return -255;        /* not supported by now */
 }
 
-extern int
-id3tag_set_textinfo_ucs2(lame_t gfp, char const *id, unsigned short const *text);
+//extern int
+//id3tag_set_textinfo_ucs2(lame_t gfp, char const *id, unsigned short const *text);
 
 int
-id3tag_set_textinfo_ucs2(lame_t gfp, char const *id, unsigned short const *text)
+id3tag_set_textinfo_ucs2(lame_t gfp, char const *id, typed.Uint16List text)
 {
     return id3tag_set_textinfo_utf16(gfp, id, text);
 }
@@ -1036,10 +1107,10 @@ id3tag_set_comment_ucs2(lame_t gfp, char const *lang, unsigned short const *desc
 void
 id3tag_set_title(lame_t gfp, const char *title)
 {
-    lame_internal_flags *gfc = gfp != 0 ? gfp->internal_flags : 0;
+    lame_internal_flags *gfc = gfp != 0 ? gfp.internal_flags : 0;
     if (gfc && title && *title) {
-        local_strdup(&gfc->tag_spec.title, title);
-        gfc->tag_spec.flags |= CHANGED_FLAG;
+        local_strdup(&gfc.tag_spec.title, title);
+        gfc.tag_spec.flags |= CHANGED_FLAG;
         copyV1ToV2(gfp, ID_TITLE, title);
     }
 }
@@ -1047,10 +1118,10 @@ id3tag_set_title(lame_t gfp, const char *title)
 void
 id3tag_set_artist(lame_t gfp, const char *artist)
 {
-    lame_internal_flags *gfc = gfp != 0 ? gfp->internal_flags : 0;
+    lame_internal_flags *gfc = gfp != 0 ? gfp.internal_flags : 0;
     if (gfc && artist && *artist) {
-        local_strdup(&gfc->tag_spec.artist, artist);
-        gfc->tag_spec.flags |= CHANGED_FLAG;
+        local_strdup(&gfc.tag_spec.artist, artist);
+        gfc.tag_spec.flags |= CHANGED_FLAG;
         copyV1ToV2(gfp, ID_ARTIST, artist);
     }
 }
@@ -1058,10 +1129,10 @@ id3tag_set_artist(lame_t gfp, const char *artist)
 void
 id3tag_set_album(lame_t gfp, const char *album)
 {
-    lame_internal_flags *gfc = gfp != 0 ? gfp->internal_flags : 0;
+    lame_internal_flags *gfc = gfp != 0 ? gfp.internal_flags : 0;
     if (gfc && album && *album) {
-        local_strdup(&gfc->tag_spec.album, album);
-        gfc->tag_spec.flags |= CHANGED_FLAG;
+        local_strdup(&gfc.tag_spec.album, album);
+        gfc.tag_spec.flags |= CHANGED_FLAG;
         copyV1ToV2(gfp, ID_ALBUM, album);
     }
 }
@@ -1069,7 +1140,7 @@ id3tag_set_album(lame_t gfp, const char *album)
 void
 id3tag_set_year(lame_t gfp, const char *year)
 {
-    lame_internal_flags *gfc = gfp != 0 ? gfp->internal_flags : 0;
+    lame_internal_flags *gfc = gfp != 0 ? gfp.internal_flags : 0;
     if (gfc && year && *year) {
         int     num = atoi(year);
         if (num < 0) {
@@ -1080,8 +1151,8 @@ id3tag_set_year(lame_t gfp, const char *year)
             num = 9999;
         }
         if (num) {
-            gfc->tag_spec.year = num;
-            gfc->tag_spec.flags |= CHANGED_FLAG;
+            gfc.tag_spec.year = num;
+            gfc.tag_spec.flags |= CHANGED_FLAG;
         }
         copyV1ToV2(gfp, ID_YEAR, year);
     }
@@ -1090,14 +1161,14 @@ id3tag_set_year(lame_t gfp, const char *year)
 void
 id3tag_set_comment(lame_t gfp, const char *comment)
 {
-    lame_internal_flags *gfc = gfp != 0 ? gfp->internal_flags : 0;
+    lame_internal_flags *gfc = gfp != 0 ? gfp.internal_flags : 0;
     if (gfc && comment && *comment) {
-        local_strdup(&gfc->tag_spec.comment, comment);
-        gfc->tag_spec.flags |= CHANGED_FLAG;
+        local_strdup(&gfc.tag_spec.comment, comment);
+        gfc.tag_spec.flags |= CHANGED_FLAG;
         {
-            uint32_t const flags = gfc->tag_spec.flags;
+            final int flags = gfc.tag_spec.flags;
             id3v2_add_latin1(gfp, ID_COMMENT, "XXX", "", comment);
-            gfc->tag_spec.flags = flags;
+            gfc.tag_spec.flags = flags;
         }
     }
 }
@@ -1106,7 +1177,7 @@ int
 id3tag_set_track(lame_t gfp, const char *track)
 {
     char const *trackcount;
-    lame_internal_flags *gfc = gfp != 0 ? gfp->internal_flags : 0;
+    lame_internal_flags *gfc = gfp != 0 ? gfp.internal_flags : 0;
     int     ret = 0;
 
     if (gfc && track && *track) {
@@ -1115,16 +1186,16 @@ id3tag_set_track(lame_t gfp, const char *track)
         if (num < 1 || num > 255) {
             num = 0;
             ret = -1;   /* track number out of ID3v1 range, ignored for ID3v1 */
-            gfc->tag_spec.flags |= (CHANGED_FLAG | ADD_V2_FLAG);
+            gfc.tag_spec.flags |= (CHANGED_FLAG | ADD_V2_FLAG);
         }
         if (num) {
-            gfc->tag_spec.track_id3v1 = num;
-            gfc->tag_spec.flags |= CHANGED_FLAG;
+            gfc.tag_spec.track_id3v1 = num;
+            gfc.tag_spec.flags |= CHANGED_FLAG;
         }
         /* Look for the total track count after a "/", same restrictions */
         trackcount = strchr(track, '/');
         if (trackcount && *trackcount) {
-            gfc->tag_spec.flags |= (CHANGED_FLAG | ADD_V2_FLAG);
+            gfc.tag_spec.flags |= (CHANGED_FLAG | ADD_V2_FLAG);
         }
         copyV1ToV2(gfp, ID_TRACK, track);
     }
@@ -1150,7 +1221,7 @@ local_strcasecmp(const char *s1, const char *s2)
 }
 
 
-static 
+static
 const char* nextUpperAlpha(const char* p, char x)
 {
     char c;
@@ -1190,7 +1261,7 @@ sloppyCompared(const char* p, const char* q)
 }
 
 
-static int 
+static int
 sloppySearchGenre(const char *genre)
 {
     int i;
@@ -1219,19 +1290,19 @@ searchGenre(const char* genre)
 int
 id3tag_set_genre(lame_t gfp, const char *genre)
 {
-    lame_internal_flags *gfc = gfp->internal_flags;
+    lame_internal_flags *gfc = gfp.internal_flags;
     int     ret = 0;
     if (genre && *genre) {
         int const num = lookupGenre(genre);
         if (num == -1) return num;
-        gfc->tag_spec.flags |= CHANGED_FLAG;
+        gfc.tag_spec.flags |= CHANGED_FLAG;
         if (num >= 0) {
-            gfc->tag_spec.genre_id3v1 = num;
+            gfc.tag_spec.genre_id3v1 = num;
             genre = genre_names[num];
         }
         else {
-            gfc->tag_spec.genre_id3v1 = GENRE_INDEX_OTHER;
-            gfc->tag_spec.flags |= ADD_V2_FLAG;
+            gfc.tag_spec.genre_id3v1 = GENRE_INDEX_OTHER;
+            gfc.tag_spec.flags |= ADD_V2_FLAG;
         }
         copyV1ToV2(gfp, ID_GENRE, genre);
     }
@@ -1246,19 +1317,19 @@ sizeOfNode(FrameDataNode const *node)
     if (node) {
         n = 10;         /* header size */
         n += 1;         /* text encoding flag */
-        switch (node->txt.enc) {
+        switch (node.txt.enc) {
         default:
         case 0:
-            if (node->dsc.dim > 0) {
-                n += node->dsc.dim + 1;
+            if (node.dsc.dim > 0) {
+                n += node.dsc.dim + 1;
             }
-            n += node->txt.dim;
+            n += node.txt.dim;
             break;
         case 1:
-            if (node->dsc.dim > 0) {
-                n += (node->dsc.dim+1) * 2;
+            if (node.dsc.dim > 0) {
+                n += (node.dsc.dim+1) * 2;
             }
-            n += node->txt.dim * 2;
+            n += node.txt.dim * 2;
             break;
         }
     }
@@ -1273,22 +1344,22 @@ sizeOfCommentNode(FrameDataNode const *node)
         n = 10;         /* header size */
         n += 1;         /* text encoding flag */
         n += 3;         /* language */
-        switch (node->dsc.enc) {
+        switch (node.dsc.enc) {
         default:
         case 0:
-            n += 1 + node->dsc.dim;
+            n += 1 + node.dsc.dim;
             break;
         case 1:
-            n += 2 + node->dsc.dim * 2;
+            n += 2 + node.dsc.dim * 2;
             break;
         }
-        switch (node->txt.enc) {
+        switch (node.txt.enc) {
         default:
         case 0:
-            n += node->txt.dim;
+            n += node.txt.dim;
             break;
         case 1:
-            n += node->txt.dim * 2;
+            n += node.txt.dim * 2;
             break;
         }
     }
@@ -1301,26 +1372,26 @@ sizeOfWxxxNode(FrameDataNode const *node)
     size_t  n = 0;
     if (node) {
         n = 10;         /* header size */
-        if (node->dsc.dim > 0) {
+        if (node.dsc.dim > 0) {
             n += 1;         /* text encoding flag */
-            switch (node->dsc.enc) {
+            switch (node.dsc.enc) {
             default:
             case 0:
-                n += 1 + node->dsc.dim;
+                n += 1 + node.dsc.dim;
                 break;
             case 1:
-                n += 2 + node->dsc.dim * 2;
+                n += 2 + node.dsc.dim * 2;
                 break;
             }
         }
-        if (node->txt.dim > 0) {
-            switch (node->txt.enc) {
+        if (node.txt.dim > 0) {
+            switch (node.txt.enc) {
             default:
             case 0:
-                n += node->txt.dim;
+                n += node.txt.dim;
                 break;
             case 1:
-                n += node->txt.dim - 1; /* UCS2 -> Latin1, skip BOM */
+                n += node.txt.dim - 1; /* UCS2 . Latin1, skip BOM */
                 break;
             }
         }
@@ -1377,33 +1448,33 @@ set_frame_comment(unsigned char *frame, FrameDataNode const *node)
 {
     size_t const n = sizeOfCommentNode(node);
     if (n > 10) {
-        frame = set_4_byte_value(frame, node->fid);
+        frame = set_4_byte_value(frame, node.fid);
         frame = set_4_byte_value(frame, (uint32_t) (n - 10));
         /* clear 2-byte header flags */
         *frame++ = 0;
         *frame++ = 0;
         /* encoding descriptor byte */
-        *frame++ = node->txt.enc == 1 ? 1 : 0;
+        *frame++ = node.txt.enc == 1 ? 1 : 0;
         /* 3 bytes language */
-        *frame++ = node->lng[0];
-        *frame++ = node->lng[1];
-        *frame++ = node->lng[2];
+        *frame++ = node.lng[0];
+        *frame++ = node.lng[1];
+        *frame++ = node.lng[2];
         /* descriptor with zero byte(s) separator */
-        if (node->dsc.enc != 1) {
-            frame = writeChars(frame, node->dsc.ptr.l, node->dsc.dim);
+        if (node.dsc.enc != 1) {
+            frame = writeChars(frame, node.dsc.ptr.l, node.dsc.dim);
             *frame++ = 0;
         }
         else {
-            frame = writeUcs2s(frame, node->dsc.ptr.u, node->dsc.dim);
+            frame = writeUcs2s(frame, node.dsc.ptr.u, node.dsc.dim);
             *frame++ = 0;
             *frame++ = 0;
         }
         /* comment full text */
-        if (node->txt.enc != 1) {
-            frame = writeChars(frame, node->txt.ptr.l, node->txt.dim);
+        if (node.txt.enc != 1) {
+            frame = writeChars(frame, node.txt.ptr.l, node.txt.dim);
         }
         else {
-            frame = writeUcs2s(frame, node->txt.ptr.u, node->txt.dim);
+            frame = writeUcs2s(frame, node.txt.ptr.u, node.txt.dim);
         }
     }
     return frame;
@@ -1414,62 +1485,62 @@ set_frame_custom2(unsigned char *frame, FrameDataNode const *node)
 {
     size_t const n = sizeOfNode(node);
     if (n > 10) {
-        frame = set_4_byte_value(frame, node->fid);
+        frame = set_4_byte_value(frame, node.fid);
         frame = set_4_byte_value(frame, (unsigned long) (n - 10));
         /* clear 2-byte header flags */
         *frame++ = 0;
         *frame++ = 0;
         /* clear 1 encoding descriptor byte to indicate ISO-8859-1 format */
-        *frame++ = node->txt.enc == 1 ? 1 : 0;
-        if (node->dsc.dim > 0) {
-            if (node->dsc.enc != 1) {
-                frame = writeChars(frame, node->dsc.ptr.l, node->dsc.dim);
+        *frame++ = node.txt.enc == 1 ? 1 : 0;
+        if (node.dsc.dim > 0) {
+            if (node.dsc.enc != 1) {
+                frame = writeChars(frame, node.dsc.ptr.l, node.dsc.dim);
                 *frame++ = 0;
             }
             else {
-                frame = writeUcs2s(frame, node->dsc.ptr.u, node->dsc.dim);
+                frame = writeUcs2s(frame, node.dsc.ptr.u, node.dsc.dim);
                 *frame++ = 0;
                 *frame++ = 0;
             }
         }
-        if (node->txt.enc != 1) {
-            frame = writeChars(frame, node->txt.ptr.l, node->txt.dim);
+        if (node.txt.enc != 1) {
+            frame = writeChars(frame, node.txt.ptr.l, node.txt.dim);
         }
         else {
-            frame = writeUcs2s(frame, node->txt.ptr.u, node->txt.dim);
+            frame = writeUcs2s(frame, node.txt.ptr.u, node.txt.dim);
         }
     }
     return frame;
 }
 
-static unsigned char *
+unsigned char *
 set_frame_wxxx(unsigned char *frame, FrameDataNode const *node)
 {
     size_t const n = sizeOfWxxxNode(node);
     if (n > 10) {
-        frame = set_4_byte_value(frame, node->fid);
+        frame = set_4_byte_value(frame, node.fid);
         frame = set_4_byte_value(frame, (unsigned long) (n - 10));
         /* clear 2-byte header flags */
         *frame++ = 0;
         *frame++ = 0;
-        if (node->dsc.dim > 0) {
+        if (node.dsc.dim > 0) {
             /* clear 1 encoding descriptor byte to indicate ISO-8859-1 format */
-            *frame++ = node->dsc.enc == 1 ? 1 : 0;
-            if (node->dsc.enc != 1) {
-                frame = writeChars(frame, node->dsc.ptr.l, node->dsc.dim);
+            *frame++ = node.dsc.enc == 1 ? 1 : 0;
+            if (node.dsc.enc != 1) {
+                frame = writeChars(frame, node.dsc.ptr.l, node.dsc.dim);
                 *frame++ = 0;
             }
             else {
-                frame = writeUcs2s(frame, node->dsc.ptr.u, node->dsc.dim);
+                frame = writeUcs2s(frame, node.dsc.ptr.u, node.dsc.dim);
                 *frame++ = 0;
                 *frame++ = 0;
             }
         }
-        if (node->txt.enc != 1) {
-            frame = writeChars(frame, node->txt.ptr.l, node->txt.dim);
+        if (node.txt.enc != 1) {
+            frame = writeChars(frame, node.txt.ptr.l, node.txt.dim);
         }
         else {
-            frame = writeLoBytes(frame, node->txt.ptr.u, node->txt.dim);
+            frame = writeLoBytes(frame, node.txt.ptr.u, node.txt.dim);
         }
     }
     return frame;
@@ -1566,48 +1637,48 @@ lame_get_id3v2_tag(lame_t gfp, unsigned char *buffer, size_t size)
     if (gfp == 0) {
         return 0;
     }
-    gfc = gfp->internal_flags;
+    gfc = gfp.internal_flags;
     if (gfc == 0) {
         return 0;
     }
     if (test_tag_spec_flags(gfc, V1_ONLY_FLAG)) {
         return 0;
     }
-#if 0
-    debug_tag_spec_flags(gfc, "lame_get_id3v2_tag");
-#endif
+//#if 0
+//    debug_tag_spec_flags(gfc, "lame_get_id3v2_tag");
+//#endif
     {
         int usev2 = test_tag_spec_flags(gfc, ADD_V2_FLAG | V2_ONLY_FLAG);
         /* calculate length of four fields which may not fit in verion 1 tag */
-        size_t  title_length = gfc->tag_spec.title ? strlen(gfc->tag_spec.title) : 0;
-        size_t  artist_length = gfc->tag_spec.artist ? strlen(gfc->tag_spec.artist) : 0;
-        size_t  album_length = gfc->tag_spec.album ? strlen(gfc->tag_spec.album) : 0;
-        size_t  comment_length = gfc->tag_spec.comment ? strlen(gfc->tag_spec.comment) : 0;
+        size_t  title_length = gfc.tag_spec.title ? strlen(gfc.tag_spec.title) : 0;
+        size_t  artist_length = gfc.tag_spec.artist ? strlen(gfc.tag_spec.artist) : 0;
+        size_t  album_length = gfc.tag_spec.album ? strlen(gfc.tag_spec.album) : 0;
+        size_t  comment_length = gfc.tag_spec.comment ? strlen(gfc.tag_spec.comment) : 0;
         /* write tag if explicitly requested or if fields overflow */
         if ((title_length > 30)
             || (artist_length > 30)
             || (album_length > 30)
             || (comment_length > 30)
-            || (gfc->tag_spec.track_id3v1 && (comment_length > 28))) {
+            || (gfc.tag_spec.track_id3v1 && (comment_length > 28))) {
             usev2 = 1;
         }
         if (usev2) {
-            size_t  tag_size;
+            int  tag_size;
             unsigned char *p;
             size_t  adjusted_tag_size;
-            const char *albumart_mime = NULL;
-            static const char *mime_jpeg = "image/jpeg";
-            static const char *mime_png = "image/png";
-            static const char *mime_gif = "image/gif";
+            String albumart_mime = null;
+            const String mime_jpeg = "image/jpeg";
+            const String mime_png = "image/png";
+            const String mime_gif = "image/gif";
 
-            if (gfp->num_samples != MAX_U_32_NUM) {
-                id3v2AddAudioDuration(gfp, gfp->num_samples);
+            if (gfp.num_samples != MAX_U_32_NUM) {
+                id3v2AddAudioDuration(gfp, gfp.num_samples);
             }
 
             /* calulate size of tag starting with 10-byte tag header */
             tag_size = 10;
-            if (gfc->tag_spec.albumart && gfc->tag_spec.albumart_size) {
-                switch (gfc->tag_spec.albumart_mimetype) {
+            if (gfc.tag_spec.albumart && gfc.tag_spec.albumart_size) {
+                switch (gfc.tag_spec.albumart_mimetype) {
                 case MIMETYPE_JPEG:
                     albumart_mime = mime_jpeg;
                     break;
@@ -1619,18 +1690,18 @@ lame_get_id3v2_tag(lame_t gfp, unsigned char *buffer, size_t size)
                     break;
                 }
                 if (albumart_mime) {
-                    tag_size += 10 + 4 + strlen(albumart_mime) + gfc->tag_spec.albumart_size;
+                    tag_size += 10 + 4 + strlen(albumart_mime) + gfc.tag_spec.albumart_size;
                 }
             }
             {
-                id3tag_spec *tag = &gfc->tag_spec;
-                if (tag->v2_head != 0) {
+                id3tag_spec *tag = &gfc.tag_spec;
+                if (tag.v2_head != 0) {
                     FrameDataNode *node;
-                    for (node = tag->v2_head; node != 0; node = node->nxt) {
-                        if (node->fid == ID_COMMENT || node->fid == ID_USER) {
+                    for (node = tag.v2_head; node != 0; node = node.nxt) {
+                        if (node.fid == ID_COMMENT || node.fid == ID_USER) {
                             tag_size += sizeOfCommentNode(node);
                         }
-                        else if (isFrameIdMatching(node->fid, FRAME_ID('W',0,0,0))) {
+                        else if (isFrameIdMatching(node.fid, FRAME_ID('W',0,0,0))) {
                             tag_size += sizeOfWxxxNode(node);
                         }
                         else {
@@ -1641,7 +1712,7 @@ lame_get_id3v2_tag(lame_t gfp, unsigned char *buffer, size_t size)
             }
             if (test_tag_spec_flags(gfc, PAD_V2_FLAG)) {
                 /* add some bytes of padding */
-                tag_size += gfc->tag_spec.padding_size;
+                tag_size += gfc.tag_spec.padding_size;
             }
             if (size < tag_size) {
                 return tag_size;
@@ -1661,7 +1732,7 @@ lame_get_id3v2_tag(lame_t gfp, unsigned char *buffer, size_t size)
             *p++ = 0;
             /* calculate and set tag size = total size - header size */
             adjusted_tag_size = tag_size - 10;
-            /* encode adjusted size into four bytes where most significant 
+            /* encode adjusted size into four bytes where most significant
              * bit is clear in each byte, for 28-bit total */
             *p++ = (unsigned char) ((adjusted_tag_size >> 21) & 0x7fu);
             *p++ = (unsigned char) ((adjusted_tag_size >> 14) & 0x7fu);
@@ -1680,14 +1751,14 @@ lame_get_id3v2_tag(lame_t gfp, unsigned char *buffer, size_t size)
 
             /* set each frame in tag */
             {
-                id3tag_spec *tag = &gfc->tag_spec;
-                if (tag->v2_head != 0) {
+                id3tag_spec *tag = &gfc.tag_spec;
+                if (tag.v2_head != 0) {
                     FrameDataNode *node;
-                    for (node = tag->v2_head; node != 0; node = node->nxt) {
-                        if (node->fid == ID_COMMENT || node->fid == ID_USER) {
+                    for (node = tag.v2_head; node != 0; node = node.nxt) {
+                        if (node.fid == ID_COMMENT || node.fid == ID_USER) {
                             p = set_frame_comment(p, node);
                         }
-                        else if (isFrameIdMatching(node->fid,FRAME_ID('W',0,0,0))) {
+                        else if (isFrameIdMatching(node.fid,FRAME_ID('W',0,0,0))) {
                             p = set_frame_wxxx(p, node);
                         }
                         else {
@@ -1697,8 +1768,8 @@ lame_get_id3v2_tag(lame_t gfp, unsigned char *buffer, size_t size)
                 }
             }
             if (albumart_mime) {
-                p = set_frame_apic(p, albumart_mime, gfc->tag_spec.albumart,
-                                   gfc->tag_spec.albumart_size);
+                p = set_frame_apic(p, albumart_mime, gfc.tag_spec.albumart,
+                                   gfc.tag_spec.albumart_size);
             }
             /* clear any padding bytes */
             memset(p, 0, tag_size - (p - buffer));
@@ -1711,10 +1782,10 @@ lame_get_id3v2_tag(lame_t gfp, unsigned char *buffer, size_t size)
 int
 id3tag_write_v2(lame_t gfp)
 {
-    lame_internal_flags *gfc = gfp->internal_flags;
-#if 0
-    debug_tag_spec_flags(gfc, "write v2");
-#endif
+    lame_internal_flags *gfc = gfp.internal_flags;
+//#if 0
+//    debug_tag_spec_flags(gfc, "write v2");
+//#endif
     if (test_tag_spec_flags(gfc, V1_ONLY_FLAG)) {
         return 0;
     }
@@ -1760,7 +1831,7 @@ set_text_field(unsigned char *field, const char *text, size_t size, int pad)
 }
 
 size_t
-lame_get_id3v1_tag(lame_t gfp, unsigned char *buffer, size_t size)
+lame_get_id3v1_tag(lame_t gfp, typed.Uint8List buffer, int size)
 {
     size_t const tag_size = 128;
     lame_internal_flags *gfc;
@@ -1771,7 +1842,7 @@ lame_get_id3v1_tag(lame_t gfp, unsigned char *buffer, size_t size)
     if (size < tag_size) {
         return tag_size;
     }
-    gfc = gfp->internal_flags;
+    gfc = gfp.internal_flags;
     if (gfc == 0) {
         return 0;
     }
@@ -1791,19 +1862,19 @@ lame_get_id3v1_tag(lame_t gfp, unsigned char *buffer, size_t size)
         *p++ = 'A';
         *p++ = 'G';
         /* set each field in tag */
-        p = set_text_field(p, gfc->tag_spec.title, 30, pad);
-        p = set_text_field(p, gfc->tag_spec.artist, 30, pad);
-        p = set_text_field(p, gfc->tag_spec.album, 30, pad);
-        sprintf(year, "%d", gfc->tag_spec.year);
-        p = set_text_field(p, gfc->tag_spec.year ? year : NULL, 4, pad);
+        p = set_text_field(p, gfc.tag_spec.title, 30, pad);
+        p = set_text_field(p, gfc.tag_spec.artist, 30, pad);
+        p = set_text_field(p, gfc.tag_spec.album, 30, pad);
+        sprintf(year, "%d", gfc.tag_spec.year);
+        p = set_text_field(p, gfc.tag_spec.year ? year : NULL, 4, pad);
         /* limit comment field to 28 bytes if a track is specified */
-        p = set_text_field(p, gfc->tag_spec.comment, gfc->tag_spec.track_id3v1 ? 28 : 30, pad);
-        if (gfc->tag_spec.track_id3v1) {
+        p = set_text_field(p, gfc.tag_spec.comment, gfc.tag_spec.track_id3v1 ? 28 : 30, pad);
+        if (gfc.tag_spec.track_id3v1) {
             /* clear the next byte to indicate a version 1.1 tag */
             *p++ = 0;
-            *p++ = gfc->tag_spec.track_id3v1;
+            *p++ = gfc.tag_spec.track_id3v1;
         }
-        *p++ = gfc->tag_spec.genre_id3v1;
+        *p++ = gfc.tag_spec.genre_id3v1;
         return tag_size;
     }
     return 0;
@@ -1812,7 +1883,7 @@ lame_get_id3v1_tag(lame_t gfp, unsigned char *buffer, size_t size)
 int
 id3tag_write_v1(lame_t gfp)
 {
-    lame_internal_flags *const gfc = gfp->internal_flags;
+    lame_internal_flags *const gfc = gfp.internal_flags;
     size_t  i, n, m;
     unsigned char tag[128];
 

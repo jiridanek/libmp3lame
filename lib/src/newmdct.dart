@@ -1,5 +1,5 @@
 /*
- *      MP3 window subband -> subband filtering -> mdct routine
+ *      MP3 window subband . subband filtering . mdct routine
  *
  *      Copyright (c) 1999-2000 Takehiro Tominaga
  *
@@ -26,16 +26,20 @@
 
 /* $Id: newmdct.c,v 1.39 2011/05/07 16:05:17 rbrito Exp $ */
 
-#ifdef HAVE_CONFIG_H
-# include <config.h>
-#endif
 
-#include "lame.h"
-#include "machine.h"
-#include "encoder.h"
-#include "util.h"
-#include "newmdct.h"
+part of libmp3lame;
 
+//
+//#ifdef HAVE_CONFIG_H
+//# include <config.h>
+//#endif
+//
+//#include "lame.h"
+//#include "machine.h"
+//#include "encoder.h"
+//#include "util.h"
+//#include "newmdct.h"
+//
 
 
 #ifndef USE_GOGO_SUBBAND
@@ -942,21 +946,21 @@ mdct_long(FLOAT * out, FLOAT const *in)
 
 
 void
-mdct_sub48(lame_internal_flags * gfc, const sample_t * w0, const sample_t * w1)
+mdct_sub48(lame_internal_flags gfc, typed.Float32List w0, typed.Float32List w1)
 {
-    SessionConfig_t const *const cfg = &gfc->cfg;
-    EncStateVar_t *const esv = &gfc->sv_enc;
+    final SessionConfig_t cfg = gfc.cfg;
+    EncStateVar_t *const esv = &gfc.sv_enc;
     int     gr, k, ch;
     const sample_t *wk;
 
     wk = w0 + 286;
-    /* thinking cache performance, ch->gr loop is better than gr->ch loop */
-    for (ch = 0; ch < cfg->channels_out; ch++) {
-        for (gr = 0; gr < cfg->mode_gr; gr++) {
+    /* thinking cache performance, ch.gr loop is better than gr.ch loop */
+    for (ch = 0; ch < cfg.channels_out; ch++) {
+        for (gr = 0; gr < cfg.mode_gr; gr++) {
             int     band;
-            gr_info *const gi = &(gfc->l3_side.tt[gr][ch]);
-            FLOAT  *mdct_enc = gi->xr;
-            FLOAT  *samp = esv->sb_sample[ch][1 - gr][0];
+            gr_info *const gi = &(gfc.l3_side.tt[gr][ch]);
+            FLOAT  *mdct_enc = gi.xr;
+            FLOAT  *samp = esv.sb_sample[ch][1 - gr][0];
 
             for (k = 0; k < 18 / 2; k++) {
                 window_subband(wk, samp);
@@ -976,18 +980,18 @@ mdct_sub48(lame_internal_flags * gfc, const sample_t * w0, const sample_t * w1)
              * + 18 current subband samples
              */
             for (band = 0; band < 32; band++, mdct_enc += 18) {
-                int     type = gi->block_type;
-                FLOAT const *const band0 = esv->sb_sample[ch][gr][0] + order[band];
-                FLOAT  *const band1 = esv->sb_sample[ch][1 - gr][0] + order[band];
-                if (gi->mixed_block_flag && band < 2)
+                int     type = gi.block_type;
+                FLOAT const *const band0 = esv.sb_sample[ch][gr][0] + order[band];
+                FLOAT  *const band1 = esv.sb_sample[ch][1 - gr][0] + order[band];
+                if (gi.mixed_block_flag && band < 2)
                     type = 0;
-                if (esv->amp_filter[band] < 1e-12) {
+                if (esv.amp_filter[band] < 1e-12) {
                     memset(mdct_enc, 0, 18 * sizeof(FLOAT));
                 }
                 else {
-                    if (esv->amp_filter[band] < 1.0) {
+                    if (esv.amp_filter[band] < 1.0) {
                         for (k = 0; k < 18; k++)
-                            band1[k * 32] *= esv->amp_filter[band];
+                            band1[k * 32] *= esv.amp_filter[band];
                     }
                     if (type == SHORT_TYPE) {
                         for (k = -NS / 4; k < 0; k++) {
@@ -1032,8 +1036,8 @@ mdct_sub48(lame_internal_flags * gfc, const sample_t * w0, const sample_t * w1)
             }
         }
         wk = w1 + 286;
-        if (cfg->mode_gr == 1) {
-            memcpy(esv->sb_sample[ch][0], esv->sb_sample[ch][1], 576 * sizeof(FLOAT));
+        if (cfg.mode_gr == 1) {
+            memcpy(esv.sb_sample[ch][0], esv.sb_sample[ch][1], 576 * sizeof(FLOAT));
         }
     }
 }

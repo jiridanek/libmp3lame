@@ -21,75 +21,103 @@
 
 /* $Id: tables.c,v 1.29 2011/05/07 16:05:17 rbrito Exp $ */
 
-#ifdef HAVE_CONFIG_H
-# include <config.h>
-#endif
+//#ifdef HAVE_CONFIG_H
+//# include <config.h>
+//#endif
+//
+//#include "machine.h"
+//
+//#include "lame.h"
 
-#include "machine.h"
+part of libmp3lame;
 
-#include "lame.h"
-#include "tables.h"
+const HTN = 34;
 
+class huffcodetab {
+    int xlen;          /* max. x-index+   */
+    int linmax;        /* max number to be stored in linbits */
+    var table;      /* pointer to array[xlen][ylen]  */
+    var hlen;        /* pointer to array[xlen][ylen]  */
+    huffcodetab(this.xlen, this.linmax, this.table, this.hlen);
+}
 
-static const uint16_t t1HB[] = {
+//var ht = new List<huffcodetab>(HTN);
+    /* global memory block   */
+    /* array of all huffcodtable headers */
+    /* 0..31 Huffman code table 0..31  */
+    /* 32,33 count1-tables   */
+
+//var t32l = new List<int>(); /*uint8_t*/
+//var t33l = new List<int>(); /*uint8_t*/
+
+//var largetbl = new typed.Uint32List(16 * 16);
+//var table23 = new typed.Uint32List(3 * 3);
+//var table56 = new typed.Uint32List(4 * 4);
+
+//var scfsi_band = new List<int>(5);
+
+//extern const int bitrate_table    [3][16];
+//extern const int samplerate_table [3][ 4];
+
+final t1HB = new typed.Uint16List.fromList([
     1, 1,
     1, 0
-};
+]);
 
-static const uint16_t t2HB[] = {
+final t2HB = new typed.Uint16List.fromList([
     1, 2, 1,
     3, 1, 1,
     3, 2, 0
-};
+]);
 
-static const uint16_t t3HB[] = {
+final t3HB = new typed.Uint16List.fromList([
     3, 2, 1,
     1, 1, 1,
     3, 2, 0
-};
+]);
 
-static const uint16_t t5HB[] = {
+final t5HB = new typed.Uint16List.fromList([
     1, 2, 6, 5,
     3, 1, 4, 4,
     7, 5, 7, 1,
     6, 1, 1, 0
-};
+]);
 
-static const uint16_t t6HB[] = {
+final t6HB = new typed.Uint16List.fromList([
     7, 3, 5, 1,
     6, 2, 3, 2,
     5, 4, 4, 1,
     3, 3, 2, 0
-};
+]);
 
-static const uint16_t t7HB[] = {
+final t7HB = new typed.Uint16List.fromList([
     1, 2, 10, 19, 16, 10,
     3, 3, 7, 10, 5, 3,
     11, 4, 13, 17, 8, 4,
     12, 11, 18, 15, 11, 2,
     7, 6, 9, 14, 3, 1,
     6, 4, 5, 3, 2, 0
-};
+]);
 
-static const uint16_t t8HB[] = {
+final t8HB = new typed.Uint16List.fromList([
     3, 4, 6, 18, 12, 5,
     5, 1, 2, 16, 9, 3,
     7, 3, 5, 14, 7, 3,
     19, 17, 15, 13, 10, 4,
     13, 5, 8, 11, 5, 1,
     12, 4, 4, 1, 1, 0
-};
+]);
 
-static const uint16_t t9HB[] = {
+final t9HB = new typed.Uint16List.fromList([
     7, 5, 9, 14, 15, 7,
     6, 4, 5, 5, 6, 7,
     7, 6, 8, 8, 8, 5,
     15, 6, 9, 10, 5, 1,
     11, 7, 9, 6, 4, 1,
     14, 4, 6, 2, 6, 0
-};
+]);
 
-static const uint16_t t10HB[] = {
+final t10HB = new typed.Uint16List.fromList([
     1, 2, 10, 23, 35, 30, 12, 17,
     3, 3, 8, 12, 18, 21, 12, 7,
     11, 9, 15, 21, 32, 40, 19, 6,
@@ -98,9 +126,9 @@ static const uint16_t t10HB[] = {
     31, 22, 41, 26, 21, 20, 5, 3,
     14, 13, 10, 11, 16, 6, 5, 1,
     9, 8, 7, 8, 4, 4, 2, 0
-};
+]);
 
-static const uint16_t t11HB[] = {
+final t11HB = new typed.Uint16List.fromList([
     3, 4, 10, 24, 34, 33, 21, 15,
     5, 3, 4, 10, 32, 17, 11, 10,
     11, 7, 13, 18, 30, 31, 20, 5,
@@ -109,9 +137,9 @@ static const uint16_t t11HB[] = {
     28, 26, 32, 19, 17, 15, 8, 14,
     14, 12, 9, 13, 14, 9, 4, 1,
     11, 4, 6, 6, 6, 3, 2, 0
-};
+]);
 
-static const uint16_t t12HB[] = {
+final t12HB = new typed.Uint16List.fromList([
     9, 6, 16, 33, 41, 39, 38, 26,
     7, 5, 6, 9, 23, 16, 26, 11,
     17, 7, 11, 14, 21, 30, 10, 7,
@@ -120,9 +148,9 @@ static const uint16_t t12HB[] = {
     40, 17, 31, 29, 17, 13, 4, 2,
     27, 12, 11, 15, 10, 7, 4, 1,
     27, 12, 8, 12, 6, 3, 1, 0
-};
+]);
 
-static const uint16_t t13HB[] = {
+final t13HB = new typed.Uint16List.fromList([
     1, 5, 14, 21, 34, 51, 46, 71, 42, 52, 68, 52, 67, 44, 43, 19,
     3, 4, 12, 19, 31, 26, 44, 33, 31, 24, 32, 24, 31, 35, 22, 14,
     15, 13, 23, 36, 59, 49, 77, 65, 29, 40, 30, 40, 27, 33, 42, 16,
@@ -139,9 +167,9 @@ static const uint16_t t13HB[] = {
     45, 21, 34, 64, 56, 50, 49, 45, 31, 19, 12, 15, 10, 7, 6, 3,
     48, 23, 20, 39, 36, 35, 53, 21, 16, 23, 13, 10, 6, 1, 4, 2,
     16, 15, 17, 27, 25, 20, 29, 11, 17, 12, 16, 8, 1, 1, 0, 1
-};
+]);
 
-static const uint16_t t15HB[] = {
+final t15HB = new typed.Uint16List.fromList([
     7, 12, 18, 53, 47, 76, 124, 108, 89, 123, 108, 119, 107, 81, 122, 63,
     13, 5, 16, 27, 46, 36, 61, 51, 42, 70, 52, 83, 65, 41, 59, 36,
     19, 17, 15, 24, 41, 34, 59, 48, 40, 64, 50, 78, 62, 80, 56, 33,
@@ -158,9 +186,9 @@ static const uint16_t t15HB[] = {
     91, 44, 39, 38, 34, 63, 52, 45, 31, 52, 28, 19, 14, 8, 9, 3,
     123, 60, 58, 53, 47, 43, 32, 22, 37, 24, 17, 12, 15, 10, 2, 1,
     71, 37, 34, 30, 28, 20, 17, 26, 21, 16, 10, 6, 8, 6, 2, 0
-};
+]);
 
-static const uint16_t t16HB[] = {
+final t16HB = new typed.Uint16List.fromList([
     1, 5, 14, 44, 74, 63, 110, 93, 172, 149, 138, 242, 225, 195, 376, 17,
     3, 4, 12, 20, 35, 62, 53, 47, 83, 75, 68, 119, 201, 107, 207, 9,
     15, 13, 23, 38, 67, 58, 103, 90, 161, 72, 127, 117, 110, 209, 206, 16,
@@ -177,9 +205,9 @@ static const uint16_t t16HB[] = {
     747, 211, 210, 208, 370, 379, 734, 723, 714, 1735, 883, 877, 876, 3459, 865, 2,
     377, 369, 102, 187, 726, 722, 358, 711, 709, 866, 1734, 871, 3458, 870, 434, 0,
     12, 10, 7, 11, 10, 17, 11, 9, 13, 12, 10, 7, 5, 3, 1, 3
-};
+]);
 
-static const uint16_t t24HB[] = {
+final t24HB = new typed.Uint16List.fromList([
     15, 13, 46, 80, 146, 262, 248, 434, 426, 669, 653, 649, 621, 517, 1032, 88,
     14, 12, 21, 38, 71, 130, 122, 216, 209, 198, 327, 345, 319, 297, 279, 42,
     47, 22, 41, 74, 68, 128, 120, 221, 207, 194, 182, 340, 315, 295, 541, 18,
@@ -196,78 +224,78 @@ static const uint16_t t24HB[] = {
     620, 300, 296, 294, 288, 282, 273, 266, 515, 380, 374, 369, 365, 361, 357, 2,
     1033, 280, 278, 274, 267, 264, 259, 382, 378, 372, 367, 363, 360, 358, 356, 0,
     43, 20, 19, 17, 15, 13, 11, 9, 7, 6, 4, 7, 5, 3, 1, 3
-};
+]);
 
-static const uint16_t t32HB[] = {
+final t32HB = new typed.Uint16List.fromList([
     1 << 0, 5 << 1, 4 << 1, 5 << 2, 6 << 1, 5 << 2, 4 << 2, 4 << 3,
     7 << 1, 3 << 2, 6 << 2, 0 << 3, 7 << 2, 2 << 3, 3 << 3, 1 << 4
-};
+]);
 
-static const uint16_t t33HB[] = {
+final t33HB = new typed.Uint16List.fromList([
     15 << 0, 14 << 1, 13 << 1, 12 << 2, 11 << 1, 10 << 2, 9 << 2, 8 << 3,
     7 << 1, 6 << 2, 5 << 2, 4 << 3, 3 << 2, 2 << 3, 1 << 3, 0 << 4
-};
+]);
 
 
-const uint8_t t1l[] = {
+final t1l = new typed.Uint8List.fromList([
     1, 4,
     3, 5
-};
+]);
 
-static const uint8_t t2l[] = {
+final t2l = new typed.Uint8List.fromList([
     1, 4, 7,
     4, 5, 7,
     6, 7, 8
-};
+]);
 
-static const uint8_t t3l[] = {
+final t3l = new typed.Uint8List.fromList([
     2, 3, 7,
     4, 4, 7,
     6, 7, 8
-};
+]);
 
-static const uint8_t t5l[] = {
+final t5l = new typed.Uint8List.fromList([
     1, 4, 7, 8,
     4, 5, 8, 9,
     7, 8, 9, 10,
     8, 8, 9, 10
-};
+]);
 
-static const uint8_t t6l[] = {
+final t6l = new typed.Uint8List.fromList([
     3, 4, 6, 8,
     4, 4, 6, 7,
     5, 6, 7, 8,
     7, 7, 8, 9
-};
+]);
 
-static const uint8_t t7l[] = {
+final t7l = new typed.Uint8List.fromList([
     1, 4, 7, 9, 9, 10,
     4, 6, 8, 9, 9, 10,
     7, 7, 9, 10, 10, 11,
     8, 9, 10, 11, 11, 11,
     8, 9, 10, 11, 11, 12,
     9, 10, 11, 12, 12, 12
-};
+]);
 
-static const uint8_t t8l[] = {
+final t8l = new typed.Uint8List.fromList([
     2, 4, 7, 9, 9, 10,
     4, 4, 6, 10, 10, 10,
     7, 6, 8, 10, 10, 11,
     9, 10, 10, 11, 11, 12,
     9, 9, 10, 11, 12, 12,
     10, 10, 11, 11, 13, 13
-};
+]);
 
-static const uint8_t t9l[] = {
+final t9l = new typed.Uint8List.fromList([
     3, 4, 6, 7, 9, 10,
     4, 5, 6, 7, 8, 10,
     5, 6, 7, 8, 9, 10,
     7, 7, 8, 9, 9, 10,
     8, 8, 9, 9, 10, 11,
     9, 9, 10, 10, 11, 11
-};
+]);
 
-static const uint8_t t10l[] = {
+final t10l = new typed.Uint8List.fromList([
     1, 4, 7, 9, 10, 10, 10, 11,
     4, 6, 8, 9, 10, 11, 10, 10,
     7, 8, 9, 10, 11, 12, 11, 11,
@@ -276,9 +304,9 @@ static const uint8_t t10l[] = {
     10, 11, 12, 12, 13, 13, 12, 13,
     9, 10, 11, 12, 12, 12, 13, 13,
     10, 10, 11, 12, 12, 13, 13, 13
-};
+]);
 
-static const uint8_t t11l[] = {
+final t11l = new typed.Uint8List.fromList([
     2, 4, 6, 8, 9, 10, 9, 10,
     4, 5, 6, 8, 10, 10, 9, 10,
     6, 7, 8, 9, 10, 11, 10, 10,
@@ -287,9 +315,9 @@ static const uint8_t t11l[] = {
     9, 10, 11, 12, 12, 13, 12, 13,
     9, 9, 9, 10, 11, 12, 12, 12,
     9, 9, 10, 11, 12, 12, 12, 12
-};
+]);
 
-static const uint8_t t12l[] = {
+final t12l = new typed.Uint8List.fromList([
     4, 4, 6, 8, 9, 10, 10, 10,
     4, 5, 6, 7, 9, 9, 10, 10,
     6, 6, 7, 8, 9, 10, 9, 10,
@@ -298,9 +326,9 @@ static const uint8_t t12l[] = {
     9, 9, 10, 10, 10, 11, 10, 11,
     9, 9, 9, 10, 10, 11, 11, 12,
     10, 10, 10, 11, 11, 11, 11, 12
-};
+]);
 
-static const uint8_t t13l[] = {
+final t13l = new typed.Uint8List.fromList([
     1, 5, 7, 8, 9, 10, 10, 11, 10, 11, 12, 12, 13, 13, 14, 14,
     4, 6, 8, 9, 10, 10, 11, 11, 11, 11, 12, 12, 13, 14, 14, 14,
     7, 8, 9, 10, 11, 11, 12, 12, 11, 12, 12, 13, 13, 14, 15, 15,
@@ -317,9 +345,9 @@ static const uint8_t t13l[] = {
     13, 13, 14, 15, 15, 15, 16, 16, 16, 16, 16, 17, 18, 17, 18, 18,
     14, 14, 14, 15, 15, 15, 17, 16, 16, 19, 17, 17, 17, 19, 18, 18,
     13, 14, 15, 16, 16, 16, 17, 16, 17, 17, 18, 18, 21, 20, 21, 18
-};
+]);
 
-static const uint8_t t15l[] = {
+final t15l = new typed.Uint8List.fromList([
     3, 5, 6, 8, 8, 9, 10, 10, 10, 11, 11, 12, 12, 12, 13, 14,
     5, 5, 7, 8, 9, 9, 10, 10, 10, 11, 11, 12, 12, 12, 13, 13,
     6, 7, 7, 8, 9, 9, 10, 10, 10, 11, 11, 12, 12, 13, 13, 13,
@@ -336,9 +364,9 @@ static const uint8_t t15l[] = {
     12, 12, 12, 12, 12, 13, 13, 13, 13, 14, 14, 14, 14, 14, 15, 15,
     13, 13, 13, 13, 13, 13, 13, 13, 14, 14, 14, 14, 15, 15, 14, 15,
     13, 13, 13, 13, 13, 13, 13, 14, 14, 14, 14, 14, 15, 15, 15, 15
-};
+]);
 
-static const uint8_t t16_5l[] = {
+final t16_5l = new typed.Uint8List.fromList([
     1, 5, 7, 9, 10, 10, 11, 11, 12, 12, 12, 13, 13, 13, 14, 11,
     4, 6, 8, 9, 10, 11, 11, 11, 12, 12, 12, 13, 14, 13, 14, 11,
     7, 8, 9, 10, 11, 11, 12, 12, 13, 12, 13, 13, 13, 14, 14, 12,
@@ -355,9 +383,9 @@ static const uint8_t t16_5l[] = {
     15, 14, 14, 14, 15, 15, 16, 16, 16, 18, 17, 17, 17, 19, 17, 14,
     14, 15, 13, 14, 16, 16, 15, 16, 16, 17, 18, 17, 19, 17, 16, 14,
     11, 11, 11, 12, 12, 13, 13, 13, 14, 14, 14, 14, 14, 14, 14, 12
-};
+]);
 
-static const uint8_t t16l[] = {
+final t16l = new typed.Uint8List.fromList([
     1, 5, 7, 9, 10, 10, 11, 11, 12, 12, 12, 13, 13, 13, 14, 10,
     4, 6, 8, 9, 10, 11, 11, 11, 12, 12, 12, 13, 14, 13, 14, 10,
     7, 8, 9, 10, 11, 11, 12, 12, 13, 12, 13, 13, 13, 14, 14, 11,
@@ -374,9 +402,9 @@ static const uint8_t t16l[] = {
     15, 14, 14, 14, 15, 15, 16, 16, 16, 18, 17, 17, 17, 19, 17, 13,
     14, 15, 13, 14, 16, 16, 15, 16, 16, 17, 18, 17, 19, 17, 16, 13,
     10, 10, 10, 11, 11, 12, 12, 12, 13, 13, 13, 13, 13, 13, 13, 10
-};
+]);
 
-static const uint8_t t24l[] = {
+final t24l = new typed.Uint8List.fromList([
     4, 5, 7, 8, 9, 10, 10, 11, 11, 12, 12, 12, 12, 12, 13, 10,
     5, 6, 7, 8, 9, 10, 10, 11, 11, 11, 12, 12, 12, 12, 12, 10,
     7, 7, 8, 9, 9, 10, 10, 11, 11, 11, 11, 12, 12, 12, 13, 9,
@@ -393,59 +421,59 @@ static const uint8_t t24l[] = {
     12, 12, 12, 12, 12, 12, 12, 12, 13, 13, 13, 13, 13, 13, 13, 10,
     13, 12, 12, 12, 12, 12, 12, 13, 13, 13, 13, 13, 13, 13, 13, 10,
     9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 10, 10, 10, 10, 6
-};
+]);
 
-const uint8_t t32l[] = {
+final t32l = new typed.Uint8List.fromList([
     1 + 0, 4 + 1, 4 + 1, 5 + 2, 4 + 1, 6 + 2, 5 + 2, 6 + 3,
     4 + 1, 5 + 2, 5 + 2, 6 + 3, 5 + 2, 6 + 3, 6 + 3, 6 + 4
-};
+]);
 
-const uint8_t t33l[] = {
+final t33l = new typed.Uint8List.fromList([
     4 + 0, 4 + 1, 4 + 1, 4 + 2, 4 + 1, 4 + 2, 4 + 2, 4 + 3,
     4 + 1, 4 + 2, 4 + 2, 4 + 3, 4 + 2, 4 + 3, 4 + 3, 4 + 4
-};
+]);
 
 
-const struct huffcodetab ht[HTN] = {
-    /* xlen, linmax, table, hlen */
-    {0, 0, NULL, NULL},
-    {2, 0, t1HB, t1l},
-    {3, 0, t2HB, t2l},
-    {3, 0, t3HB, t3l},
-    {0, 0, NULL, NULL}, /* Apparently not used */
-    {4, 0, t5HB, t5l},
-    {4, 0, t6HB, t6l},
-    {6, 0, t7HB, t7l},
-    {6, 0, t8HB, t8l},
-    {6, 0, t9HB, t9l},
-    {8, 0, t10HB, t10l},
-    {8, 0, t11HB, t11l},
-    {8, 0, t12HB, t12l},
-    {16, 0, t13HB, t13l},
-    {0, 0, NULL, t16_5l}, /* Apparently not used */
-    {16, 0, t15HB, t15l},
+var ht = new List<huffcodetab>.from([
+/* xlen, linmax, table, hlen */
+    new huffcodetab(0, 0, null, null),
+    new huffcodetab(2, 0, t1HB, t1l),
+    new huffcodetab(3, 0, t2HB, t2l),
+    new huffcodetab(3, 0, t3HB, t3l),
+    new huffcodetab(0, 0, null, null), /* Apparently not used */
+    new huffcodetab(4, 0, t5HB, t5l),
+    new huffcodetab(4, 0, t6HB, t6l),
+    new huffcodetab(6, 0, t7HB, t7l),
+    new huffcodetab(6, 0, t8HB, t8l),
+    new huffcodetab(6, 0, t9HB, t9l),
+    new huffcodetab(8, 0, t10HB, t10l),
+    new huffcodetab(8, 0, t11HB, t11l),
+    new huffcodetab(8, 0, t12HB, t12l),
+    new huffcodetab(16, 0, t13HB, t13l),
+    new huffcodetab(0, 0, null, t16_5l), /* Apparently not used */
+    new huffcodetab(16, 0, t15HB, t15l),
 
-    {1, 1, t16HB, t16l},
-    {2, 3, t16HB, t16l},
-    {3, 7, t16HB, t16l},
-    {4, 15, t16HB, t16l},
-    {6, 63, t16HB, t16l},
-    {8, 255, t16HB, t16l},
-    {10, 1023, t16HB, t16l},
-    {13, 8191, t16HB, t16l},
+    new huffcodetab(1, 1, t16HB, t16l),
+    new huffcodetab(2, 3, t16HB, t16l),
+    new huffcodetab(3, 7, t16HB, t16l),
+    new huffcodetab(4, 15, t16HB, t16l),
+    new huffcodetab(6, 63, t16HB, t16l),
+    new huffcodetab(8, 255, t16HB, t16l),
+    new huffcodetab(10, 1023, t16HB, t16l),
+    new huffcodetab(13, 8191, t16HB, t16l),
 
-    {4, 15, t24HB, t24l},
-    {5, 31, t24HB, t24l},
-    {6, 63, t24HB, t24l},
-    {7, 127, t24HB, t24l},
-    {8, 255, t24HB, t24l},
-    {9, 511, t24HB, t24l},
-    {11, 2047, t24HB, t24l},
-    {13, 8191, t24HB, t24l},
+    new huffcodetab(4, 15, t24HB, t24l),
+    new huffcodetab(5, 31, t24HB, t24l),
+    new huffcodetab(6, 63, t24HB, t24l),
+    new huffcodetab(7, 127, t24HB, t24l),
+    new huffcodetab(8, 255, t24HB, t24l),
+    new huffcodetab(9, 511, t24HB, t24l),
+    new huffcodetab(11, 2047, t24HB, t24l),
+    new huffcodetab(13, 8191, t24HB, t24l),
 
-    {0, 0, t32HB, t32l},
-    {0, 0, t33HB, t33l},
-};
+    new huffcodetab(0, 0, t32HB, t32l),
+    new huffcodetab(0, 0, t33HB, t33l),
+], growable: false);
 
 
 
@@ -455,7 +483,7 @@ const struct huffcodetab ht[HTN] = {
  *      largetbl[i] = ((ht[16].hlen[i]) << 16) + ht[24].hlen[i];
  *  }
  */
-const uint32_t largetbl[16 * 16] = {
+var largetbl = new typed.Uint32List.fromList([
     0x010004, 0x050005, 0x070007, 0x090008, 0x0a0009, 0x0a000a, 0x0b000a, 0x0b000b,
     0x0c000b, 0x0c000c, 0x0c000c, 0x0d000c, 0x0d000c, 0x0d000c, 0x0e000d, 0x0a000a,
     0x040005, 0x060006, 0x080007, 0x090008, 0x0a0009, 0x0b000a, 0x0b000a, 0x0b000b,
@@ -488,52 +516,54 @@ const uint32_t largetbl[16 * 16] = {
     0x10000d, 0x11000d, 0x12000d, 0x11000d, 0x13000d, 0x11000d, 0x10000d, 0x0d000a,
     0x0a0009, 0x0a0009, 0x0a0009, 0x0b0009, 0x0b0009, 0x0c0009, 0x0c0009, 0x0c0009,
     0x0d0009, 0x0d0009, 0x0d0009, 0x0d000a, 0x0d000a, 0x0d000a, 0x0d000a, 0x0a0006
-};
+]);
 
 /*  for (i = 0; i < 3*3; i++) {
  *      table23[i] = ((ht[2].hlen[i]) << 16) + ht[3].hlen[i];
  *  }
  */
-const uint32_t table23[3 * 3] = {
+var table23 = new typed.Uint32List.fromList([
     0x010002, 0x040003, 0x070007,
     0x040004, 0x050004, 0x070007,
     0x060006, 0x070007, 0x080008
-};
+]);
 
 /*   for (i = 0; i < 4*4; i++) {
  *       table56[i] = ((ht[5].hlen[i]) << 16) + ht[6].hlen[i];
  *   }
  */
-const uint32_t table56[4 * 4] = {
+var table56 = new typed.Uint32List.fromList([
     0x010003, 0x040004, 0x070006, 0x080008, 0x040004, 0x050004, 0x080006, 0x090007,
     0x070005, 0x080006, 0x090007, 0x0a0008, 0x080007, 0x080007, 0x090008, 0x0a0009
-};
+]);
 
 
-
-/* 
+/*
  * 0: MPEG-2 LSF
  * 1: MPEG-1
  * 2: MPEG-2.5 LSF FhG extention                  (1995-07-11 shn)
  */
+class MPEG_t {
+  static const MPEG_2 = const MPEG_t._(0);
+  static const MPEG_1 = const MPEG_t._(1);
+  static const MPEG_25 = const MPEG_t._(2);
+  static get values => [MPEG_2, MPEG_1, MPEG_25];
 
-typedef enum {
-    MPEG_2 = 0,
-    MPEG_1 = 1,
-    MPEG_25 = 2
-} MPEG_t;
+  final int value;
+  const MPEG_t._(this.value);
+}
 
-const int bitrate_table[3][16] = {
-    {0, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160, -1}, /* MPEG 2 */
-    {0, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320, -1}, /* MPEG 1 */
-    {0, 8, 16, 24, 32, 40, 48, 56, 64, -1, -1, -1, -1, -1, -1, -1}, /* MPEG 2.5 */
-};
+var bitrate_table = new Array2D<int>.from([
+    0, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160, -1,     /* MPEG 2 */
+    0, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320, -1, /* MPEG 1 */
+    0, 8, 16, 24, 32, 40, 48, 56, 64, -1, -1, -1, -1, -1, -1, -1,         /* MPEG 2.5 */
+], 3, 16);
 
-const int samplerate_table[3][4] = {
-    {22050, 24000, 16000, -1}, /* MPEG 2 */
-    {44100, 48000, 32000, -1}, /* MPEG 1 */
-    {11025, 12000, 8000, -1}, /* MPEG 2.5 */
-};
+var samplerate_table = new Array2D<int>.from([
+    22050, 24000, 16000, -1, /* MPEG 2 */
+    44100, 48000, 32000, -1, /* MPEG 1 */
+    11025, 12000, 8000, -1,  /* MPEG 2.5 */
+], 3, 4);
 
 int
 lame_get_bitrate(int mpeg_version, int table_index)
@@ -559,6 +589,6 @@ lame_get_samplerate(int mpeg_version, int table_index)
 
 
 /* This is the scfsi_band table from 2.4.2.7 of the IS */
-const int scfsi_band[5] = { 0, 6, 11, 16, 21 };
+const scfsi_band = const [0, 6, 11, 16, 21];
 
 /* end of tables.c */
